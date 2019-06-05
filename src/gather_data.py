@@ -32,7 +32,7 @@ class CoreAPIDataCollector():
 		query = '({})'.format(' AND '.join(required_topic_queries))
 		return query
 
-	def get_articles_for_topics(self, required_topics, optional_topics=None):
+	def get_articles_for_topics(self, required_topics, optional_topics, start_page, end_page):
 		import urllib.parse
 
 		query = self._create_query_for_topics(required_topics, optional_topics)
@@ -48,12 +48,12 @@ class CoreAPIDataCollector():
 			'faithfulMetadata': False,
 			'apiKey': self.core_api_access_token
 		}
-		articles = self.get_api_objects(request_url, params=params)
+		articles = self.get_api_objects(request_url, start_page, end_page, params=params)
 		return articles
 
-	def get_api_objects(self, object_url, params=None, max_pages=10000):
+	def get_api_objects(self, object_url, start_page, end_page, params=None):
 		objects = []
-		for i in range(1, max_pages+1):
+		for i in range(start_page, end_page+1):
 			response = requests.get('{}?page={}'.format(object_url, i), params=params)
 			if response.status_code != 200:
 				print(response.status_code, response.reason, file=sys.stderr)
@@ -77,7 +77,7 @@ class CoreAPIDataCollector():
 def main(args):
 	data_collector = CoreAPIDataCollector(args.core_api_access_token)
 	# assuming core api is NOT case sensitive
-	articles = data_collector.get_articles_for_topics(['machine learning'], ['natural language processing', 'nlp', 'language model'])
+	articles = data_collector.get_articles_for_topics(['machine learning'], ['natural language processing', 'nlp', 'language model'], args.start_page, args.end_page)
 	util.dump_json(articles, args.output_articles_json_path)
 
 if __name__ == '__main__':
@@ -87,6 +87,10 @@ if __name__ == '__main__':
 	required_arguments = parser.add_argument_group('required arguments')
 	required_arguments.add_argument('-t', '--core-api-access-token', action='store', required=True, default=None, dest='core_api_access_token', help='Core API access token.')
 	required_arguments.add_argument('-o', '--output-articles-json-path', action='store', required=True, default=None, dest='output_articles_json_path', help='Path where articles json will get output.')
+
+	optional_arguments = parser.add_argument_group('optional arguments')
+	optional_arguments.add_argument('-s', '--start-page', action='store', required=False, default=0, type=int, dest='start_page', help='Start page for requests.')
+	optional_arguments.add_argument('-e', '--end-page', action='store', required=False, default=10000, type=int, dest='end_page', help='End page for requests.')
 
 	args = parser.parse_args()
 	main(args)
