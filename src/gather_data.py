@@ -5,6 +5,8 @@ import util
 
 from time import sleep
 
+#TODO: Find a way to create query with optional and required topics, e.g. (Machine Learning AND Computer Science) OR Natural Language Processing
+
 class CoreAPIDataCollector():
 	def __init__(self, core_api_access_token=None):
 		import requests
@@ -31,19 +33,21 @@ class CoreAPIDataCollector():
 
 		query = self._create_query_for_topics([topic])
 		request_url = 'https://core.ac.uk:443/api-v2/articles/search/{}'.format(urllib.parse.quote(query))
-		params = {'pageSize': 100,
-				  'metadata': True,
-				  'fulltext': True,
-				  'citations': True,
-				  'similar': True,
-				  'duplicate': False,
-				  'urls': True,
-				  'faithfulMetadata': False,
-				  'apiKey': self.core_api_access_token}
+		params = {
+			'pageSize': 100,
+			'metadata': True,
+			'fulltext': True,
+			'citations': True,
+			'similar': True,
+			'duplicate': False,
+			'urls': True,
+			'faithfulMetadata': False,
+			'apiKey': self.core_api_access_token
+		}
 		articles = self.get_api_objects(request_url, params=params)
 		return articles
 
-	def get_api_objects(self, object_url, params=None, max_pages=1000):
+	def get_api_objects(self, object_url, params=None, max_pages=10000):
 		objects = []
 		for i in range(1, max_pages+1):
 			response = requests.get('{}?page={}'.format(object_url, i), params=params)
