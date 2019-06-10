@@ -12,7 +12,7 @@ class ArticleDataset():
 	def _extract_relevant_fields(self, articles, relevant_fields):
 		data = []
 		for article in articles:
-			if all([field in article for field in relevant_fields]):
+			if all([field in article and article[field] is not None for field in relevant_fields]):
 				data += [{
 					'id': article['id'],
 					'title': article['title'],
