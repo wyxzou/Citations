@@ -60,7 +60,8 @@ class ArticleDataset():
 
 def main(args):
 	dataset = ArticleDataset(args.articles_json_path, 'SmartStopWords.txt')
-	df = dataset.get_lda_dataset()
+	df = dataset._get_raw_dataset()
+	df.to_csv(args.output_csv_path)
 
 if __name__ == '__main__':
 	import argparse
@@ -68,7 +69,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	required_arguments = parser.add_argument_group('required arguments')
 	required_arguments.add_argument('-a', '--articles-json-path', action='store', required=True, dest='articles_json_path', help='Path to scraped articles json file.')
-	required_arguments.add_argument('-o', '--output-json-path', action='store', required=True, dest='output_json_path', help='Path to output json file.')
+	required_arguments.add_argument('-o', '--output-csv-path', action='store', required=True, dest='output_csv_path', help='Path to output csv file.')
 
 	args = parser.parse_args()
 	main(args)
