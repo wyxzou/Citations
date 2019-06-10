@@ -7,11 +7,11 @@ class ArticleDataset():
 		self.text_processor = EnglishTextProcessor(stop_words_file)
 
 		articles = load_json(articles_json_path)
-		self.raw_data = self._extract_relevant_fields(articles, ['id', 'title', 'year', 'description', 'fullText', 'citations', 'repositoryDocument'])
+		self.raw_data = self._extract_relevant_fields(articles, ['id', 'title', 'year', 'description', 'fullText', 'citations'])
 
 	def _extract_relevant_fields(self, articles, relevant_fields):
 		data = []
-		for article in articles[:3]:
+		for article in articles:
 			if all([field in article for field in relevant_fields]):
 				data += [{
 					'id': article['id'],
@@ -19,8 +19,7 @@ class ArticleDataset():
 					'year': article['year'],
 					'description': self.text_processor(article['description']),
 					'full_text': self.text_processor(article['fullText']),
-					'citations': article['citations'],
-					'repository_document': article['repositoryDocument']
+					'citations': article['citations']
 				}]
 		
 		return data
@@ -60,8 +59,9 @@ class ArticleDataset():
 
 def main(args):
 	dataset = ArticleDataset(args.articles_json_path, 'SmartStopWords.txt')
-	df = dataset._get_raw_dataset()
-	df.to_csv(args.output_csv_path)
+	dump_json(dataset.raw_data, args.output_json_path)
+	#df = dataset._get_raw_dataset()
+	#df.to_csv(args.output_csv_path)
 
 if __name__ == '__main__':
 	import argparse
@@ -69,7 +69,8 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	required_arguments = parser.add_argument_group('required arguments')
 	required_arguments.add_argument('-a', '--articles-json-path', action='store', required=True, dest='articles_json_path', help='Path to scraped articles json file.')
-	required_arguments.add_argument('-o', '--output-csv-path', action='store', required=True, dest='output_csv_path', help='Path to output csv file.')
+	required_arguments.add_argument('-o', '--output-json-path', action='store', required=True, dest='output_json_path', help='Path to output json file.')
+	#required_arguments.add_argument('-o', '--output-csv-path', action='store', required=True, dest='output_csv_path', help='Path to output csv file.')
 
 	args = parser.parse_args()
 	main(args)
