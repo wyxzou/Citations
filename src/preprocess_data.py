@@ -1,16 +1,58 @@
+import json
 import pandas as pd
 
 from util import dump_json, load_json, EnglishTextProcessor
 
 class ArticleDataset():
-	def __init__(self, articles_json_path, stop_words_file):
+	def __init__(self, stop_words_file, relevant_fields, input_data_path):
 		self.text_processor = EnglishTextProcessor(stop_words_file)
+		self.raw_data = self._extract_relevant_fields(input_data_path, relevant_fields)
 
-		articles = load_json(articles_json_path)
-		self.raw_data = self._extract_relevant_fields(articles, ['id', 'title', 'year', 'description', 'fullText', 'citations'])
+	def _extract_relevant_fields(self, input_data_path, relevant_fields):
+		raise NotImplementedError()
 
-	def _extract_relevant_fields(self, articles, relevant_fields):
+class AminerDataset(ArticleDataset):
+	def __init__(self, stop_words_file, relevant_fields, articles_text_file_path):
+		'''
+		relevant_fields: 'id', 'title', 'year', 'indexed_abstract', 'references'
+		'''
+		super(AminerDataset, self).__init__(stop_words_file, relevant_fields, articles_text_file_path)
+
+	def _extract_relevant_fields(self, articles_text_file_path, relevant_fields):
+		def indexed_abstract_to_text(indexed_abstract):
+			abstract_arr = ['' for _ in range(indexed_abstract['IndexLength'])]
+			inverted_index = indexed_abstract['InvertedIndex']
+			for key in inverted_index:
+				for index in inverted_index[key]:
+					abstract_arr[index] = key
+
+			return ' '.join(abstract_arr)
+
 		data = []
+		with open(articles_text_file_path) as articles_text_file:
+			for line in articles_text_file:
+				entry = json.loads(line)
+				if all([field in entry and entry[field] is not None for field in relevant_fields]):
+					data += [{
+						'id': entry['id'],
+						'title': entry['title'],
+						'year': entry['year'],
+						'abstract': self.text_processor(indexed_abstract_to_text(entry['indexed_abstract'])),
+						'references': entry['references']
+					}]
+
+		return data
+
+class CoreDataset():
+	def __init__(self, stop_words_file, relevant_fields, articles_text_file_path):
+		'''
+		relevant_fields: 'id', 'title', 'year', 'description', 'fullText', 'citations'
+		'''
+		super(CoreDataset, self).__init__(stop_words_file, relevant_fields, articles_text_file_path)
+
+	def _extract_relevant_fields(self, articles_json_path, relevant_fields):
+		data = []
+		articles = load_json(articles_json_path)
 		for article in articles:
 			if all([field in article and article[field] is not None for field in relevant_fields]):
 				data += [{
@@ -58,19 +100,16 @@ class ArticleDataset():
 		return raw_df
 
 def main(args):
-	dataset = ArticleDataset(args.articles_json_path, 'SmartStopWords.txt')
+	dataset = AminerDataset('SmartStopWords.txt', ['id', 'title', 'year', 'indexed_abstract', 'references'], args.input_data_path)
 	dump_json(dataset.raw_data, args.output_json_path)
-	#df = dataset._get_raw_dataset()
-	#df.to_csv(args.output_csv_path)
 
 if __name__ == '__main__':
 	import argparse
 
 	parser = argparse.ArgumentParser()
 	required_arguments = parser.add_argument_group('required arguments')
-	required_arguments.add_argument('-a', '--articles-json-path', action='store', required=True, dest='articles_json_path', help='Path to scraped articles json file.')
+	required_arguments.add_argument('-a', '--input-data-path', action='store', required=True, dest='input_data_path', help='Path to input data.')
 	required_arguments.add_argument('-o', '--output-json-path', action='store', required=True, dest='output_json_path', help='Path to output json file.')
-	#required_arguments.add_argument('-o', '--output-csv-path', action='store', required=True, dest='output_csv_path', help='Path to output csv file.')
 
 	args = parser.parse_args()
 	main(args)

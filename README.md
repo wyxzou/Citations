@@ -7,3 +7,7 @@
 
 ## Core API examples
 ### https://github.com/oacore/or2016-api-demo
+
+## Requirements ##
+### Please add dependencies to requirements.txt
+### To install run: ``pip3 install -r requirements.txt``
