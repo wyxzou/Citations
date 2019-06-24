@@ -12,19 +12,23 @@ def connect_elasticsearch():
 
 def gendata():
     json_items = []
-    with open('../repository_metadata_2013-12-15/repository_metadata_2013-12-09_2.json') as json_file:  
+    res = []
+    with open('/Users/andy/uwaterloo/citations/repository_metadata_2013-12-15/repository_metadata_2013-12-09_2.json') as json_file:  
         for line in json_file:
             j = json.loads(line)
             json_items.append(j)
     for json_item in json_items:
-        print(json_item["identifier"])
-        yield {
+        res.append({
             "_index": "id",
             "_type": "document",
-            "doc": {"word": json_item["identifier"]},
-        }
+            "doc": {
+                "identifier": json_item["identifier"]
+            },
+        })
+    return res
 
 if __name__ == '__main__':
-  logging.basicConfig(level=logging.ERROR)
-  es = connect_elasticsearch()
-  helpers.bulk(es, gendata())
+    logging.basicConfig(level=logging.ERROR)
+    es = connect_elasticsearch()
+    data = gendata()
+    helpers.bulk(es, data)
