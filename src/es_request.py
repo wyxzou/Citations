@@ -13,18 +13,25 @@ def connect_elasticsearch():
 def gendata():
     json_items = []
     res = []
-    with open('/Users/andy/uwaterloo/citations/repository_metadata_2013-12-15/repository_metadata_2013-12-09_2.json') as json_file:  
+    with open('../dblp_papers_v11.txt') as json_file:  
+        counter = 0
         for line in json_file:
+            counter += 1
+            if counter > 100:
+                break
             j = json.loads(line)
             json_items.append(j)
     for json_item in json_items:
         res.append({
-            "_index": "id",
+            "_index": "aminer",
             "_type": "document",
             "doc": {
-                "identifier": json_item["identifier"]
+                "id": json_item["id"],
+                "title": json_item["title"],
+                "references": json_item.get("references", [])
             },
         })
+
     return res
 
 if __name__ == '__main__':
