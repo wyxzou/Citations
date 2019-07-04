@@ -31,6 +31,14 @@ def find_author(author_id, author_name):
     return res
 
 
+def get_ids(res):
+    ids = []
+    for doc in res['hits']['hits']:
+        ids.append(doc['_source']['id'])
+
+    return ids
+
+
 def if_references_exist(paper_id):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()   
@@ -52,7 +60,11 @@ def if_references_exist(paper_id):
 
 
 if __name__ == '__main__':
-    print(find_author('2702511795', 'Peter Kostelnik'))
+    res = find_author('2702511795', 'Peter Kostelnik')
+
+    get_ids(res)
     print(if_references_exist('100008749'))
+
+
 
     # print(es.search(index="aminer", body={"query": {"match" : {"id": "ab"}}})['hits']['hits'])
