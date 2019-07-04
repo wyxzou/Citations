@@ -13,7 +13,7 @@ def connect_elasticsearch():
 def gendata():
     json_items = []
     res = []
-    with open('../dblp_papers_v11.txt') as json_file:  
+    with open('/Users/andy/uwaterloo/citations/dblp_papers_v11.txt') as json_file:  
         counter = 0
         for line in json_file:
             counter += 1
@@ -25,11 +25,9 @@ def gendata():
         res.append({
             "_index": "aminer",
             "_type": "document",
-            "doc": {
-                "id": json_item["id"],
-                "title": json_item["title"],
-                "references": json_item.get("references", [])
-            },
+            "id": json_item["id"],
+            "title": json_item["title"],
+            "references": json_item.get("references", [])
         })
 
     return res
@@ -37,5 +35,20 @@ def gendata():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR)
     es = connect_elasticsearch()
-    data = gendata()
-    helpers.bulk(es, data)
+    # Uncomment the below two lines to generate and populate the index
+    # data = gendata()
+    # helpers.bulk(es, data)
+
+    # To search for lines in aminer index with empty query
+    # res = es.search(index="aminer", body="")
+    # print("Found ", res["hits"]["total"]["value"])
+    # for i in res["hits"]["hits"]:
+    #     print(i)
+
+    # To search for lines in aminer index with specific id
+    # res = es.search(index="aminer", body={"query": {"match" : {"id": "100008749"}}})
+    # print("Found ", res["hits"]["total"]["value"])
+    # for i in res["hits"]["hits"]:
+    #     print(i)
+    
+    
