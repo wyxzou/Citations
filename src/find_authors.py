@@ -13,7 +13,7 @@ def num_included(ground_truth, pool):
 
 
 # matching authors.name is not necessary, feel free to remove it
-def find_author(author_id, author_name):
+def find_author(author_id):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()    
 
@@ -21,7 +21,7 @@ def find_author(author_id, author_name):
         "query": {
             "bool" : {
                 "must": [
-                    { "match": {"authors.name": author_name} },
+                    # { "match": {"authors.name": author_name} },
                     { "match": {"authors.id": author_id} }
                 ]
             }
@@ -60,9 +60,9 @@ def if_references_exist(paper_id):
 
 
 if __name__ == '__main__':
-    res = find_author('2702511795', 'Peter Kostelnik')
+    res = find_author('2702511795') # 'Peter Kostelnik')
 
-    get_ids(res)
+    print(get_ids(res))
     print(if_references_exist('100008749'))
 
 
