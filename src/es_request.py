@@ -22,11 +22,9 @@ def gendata():
             j = json.loads(line)
             json_items.append(j)
 
-    # print(json_items[0])
+    
     for json_item in json_items:
-        # print(json_items)
-        # print(json_item["indexed_abstract"])
-        res.append({
+        dic = {
             "_index": "aminer",
             "_type": "document",
             "id": json_item["id"],
@@ -36,8 +34,17 @@ def gendata():
             "authors": json_item.get("authors", []),
             "keywords": json_item.get("keywords", []),
             "fos" : json_item.get("fos", []),
-            # "indexed_abstract" : json_item.get("indexed_abstract", {})    
-        })
+        }
+
+
+        if "indexed_abstract" in json_item:
+            k = list(json_item["indexed_abstract"]["InvertedIndex"].keys())
+            dic["abstract"] = k
+        else:
+            dic["abstract"] = []
+        
+        res.append(dic)
+        
 
     return res
 
