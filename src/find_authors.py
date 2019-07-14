@@ -31,6 +31,7 @@ def find_author(author_id):
     return res
 
 
+# gets id given res
 def get_ids(res):
     ids = []
     for doc in res['hits']['hits']:

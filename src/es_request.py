@@ -13,24 +13,26 @@ def connect_elasticsearch():
 def gendata():
     json_items = []
     res = []
-    with open('/Users/andy/uwaterloo/citations/dblp_papers_v11.txt') as json_file:  
+    with open('data/out.json') as json_file:  
         counter = 0
         for line in json_file:
             counter += 1
-            if counter > 100:
+            if counter > 1000:
                 break
             j = json.loads(line)
             json_items.append(j)
+
     for json_item in json_items:
         res.append({
             "_index": "aminer",
             "_type": "document",
             "id": json_item["id"],
             "title": json_item["title"],
+            "year" : json_item["year"],
             "references": json_item.get("references", []),
             "authors": json_item.get("authors", []),
             "keywords": json_item.get("keywords", []),
-            "fos" : json_item.get("fos", [])
+            "fos" : json_item.get("fos", [])    
         })
 
     return res
@@ -43,10 +45,10 @@ if __name__ == '__main__':
     # helpers.bulk(es, data)
 
     # To search for lines in aminer index with empty query
-    # res = es.search(index="aminer", body="")
-    # print("Found ", res["hits"]["total"]["value"])
-    # for i in res["hits"]["hits"]:
-    #     print(i)
+    res = es.search(index="aminer", body="")
+    print("Found ", res["hits"]["total"]["value"])
+    for i in res["hits"]["hits"]:
+        print(i)
 
     # To search for lines in aminer index with specific id
     # res = es.search(index="aminer", body={"query": {"match" : {"id": "100008749"}}})
