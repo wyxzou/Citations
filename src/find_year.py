@@ -29,17 +29,16 @@ def get_abstract(paperids):
     dic = {}
     for paperid in paperids:
         res = es.search(index="aminer", body={"query": {"match" : {"id": paperid}}})
-        print(res)
         if not res["hits"]["hits"]:
             print("Error: no such id for ", paperid)
         else:
-            # print(res["hits"]["hits"][0]['_source'].keys())
-            dic[paperid] = res["hits"]["hits"][0]['_source']['indexed_abstract']
+            dic[paperid] = res["hits"]["hits"][0]['_source']['abstract']
     
     return dic
 
 
 if __name__ == '__main__':
     ids = find_year(2015, 5, 2)
+    print(ids)
     print(get_abstract(ids))
 
