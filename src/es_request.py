@@ -22,7 +22,10 @@ def gendata():
             j = json.loads(line)
             json_items.append(j)
 
+    # print(json_items[0])
     for json_item in json_items:
+        # print(json_items)
+        # print(json_item["indexed_abstract"])
         res.append({
             "_index": "aminer",
             "_type": "document",
@@ -32,7 +35,8 @@ def gendata():
             "references": json_item.get("references", []),
             "authors": json_item.get("authors", []),
             "keywords": json_item.get("keywords", []),
-            "fos" : json_item.get("fos", [])    
+            "fos" : json_item.get("fos", []),
+            # "indexed_abstract" : json_item.get("indexed_abstract", {})    
         })
 
     return res
@@ -41,14 +45,14 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR)
     es = connect_elasticsearch()
     # Uncomment the below two lines to generate and populate the index
-    # data = gendata()
-    # helpers.bulk(es, data)
+    data = gendata()
+    helpers.bulk(es, data)
 
     # To search for lines in aminer index with empty query
-    res = es.search(index="aminer", body="")
-    print("Found ", res["hits"]["total"]["value"])
-    for i in res["hits"]["hits"]:
-        print(i)
+    # res = es.search(index="aminer", body="")
+    # print("Found ", res["hits"]["total"]["value"])
+    # for i in res["hits"]["hits"]:
+    #    print(i)
 
     # To search for lines in aminer index with specific id
     # res = es.search(index="aminer", body={"query": {"match" : {"id": "100008749"}}})

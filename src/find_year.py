@@ -23,6 +23,23 @@ def find_year(year, num_papers, num_citations):
     return chosen
 
 
+def get_abstract(paperids):
+    es = es_request.connect_elasticsearch()
+
+    dic = {}
+    for paperid in paperids:
+        res = es.search(index="aminer", body={"query": {"match" : {"id": paperid}}})
+        print(res)
+        if not res["hits"]["hits"]:
+            print("Error: no such id for ", paperid)
+        else:
+            # print(res["hits"]["hits"][0]['_source'].keys())
+            dic[paperid] = res["hits"]["hits"][0]['_source']['indexed_abstract']
+    
+    return dic
+
+
 if __name__ == '__main__':
-    find_year(2015, 100, 2)
+    ids = find_year(2015, 5, 2)
+    print(get_abstract(ids))
 
