@@ -27,9 +27,10 @@ def gendata():
             "_type": "document",
             "id": json_item["id"],
             "title": json_item["title"],
-            "references": json_item.get("references", [])
-            "authors": json_item.get("authors", [])
-            "keywords": json_item.get("keywords", [])
+            "references": json_item.get("references", []),
+            "authors": json_item.get("authors", []),
+            "keywords": json_item.get("keywords", []),
+            "fos" : json_item.get("fos", [])
         })
 
     return res
