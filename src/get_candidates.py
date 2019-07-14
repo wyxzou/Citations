@@ -60,24 +60,34 @@ def get_candidate_set(id, excluded_id_list, candidate_size):
 
 def get_candidate_dict(id_list, excluded_id_list, candidate_size):
     key_and_value_ids = id_list
+    abstract_set = set()
 
     candidate_dict = dict()
-    for id in id_list:
-        candidates = get_candidate_set(id, excluded_id_list, candidate_size)
-        candidate_dict[id] = candidates
+    for pid in id_list:
+        candidates = get_candidate_set(pid, excluded_id_list, candidate_size)
+        candidate_dict[pid] = candidates
 
     for key, value in candidate_dict.items():
-        temp = [key, value]
-        key_and_value_ids.append(temp)
 
-    abstract_dict = find_year.get_abstract(key_and_value_ids)
+        abstract_set.add(key)
+        for v in value:
+            abstract_set.add(v)
+
+
+
+    # print(key_and_value_ids)
+    abstract_dict = find_year.get_abstract(list(abstract_set))
     return candidate_dict, abstract_dict
 
 
 excluded_ids = ["2123991323", "23142202", "1483005138"]
-id_list = ["5", "100008599", "100008278", "100007563"]
-#id_list = find_year.find_year(2009, 1, 0)
+# id_list = ["5", "100008599", "100008278", "100007563"]
+
+id_list = find_year.find_year(2009, 5, 0)
 
 candidate_dict, abstract_dict = get_candidate_dict(id_list, excluded_ids, 10)
 print(candidate_dict)
-print(abstract_dict)
+print(len(candidate_dict))
+
+# print(abstract_dict)
+print(len(abstract_dict))
