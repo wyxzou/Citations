@@ -2,7 +2,7 @@ import get_candidates
 import find_year
 import json
 
-def read_citations():
+def read_candidate_citations():
     filename = "../output_data.json"
     with open(filename, "rt") as fp:
         content = json.load(fp)
