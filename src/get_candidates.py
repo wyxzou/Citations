@@ -39,6 +39,7 @@ def get_random_id():
 
 def get_candidate_set(id, excluded_id_list, candidate_size):
     reference_id_list = get_references(id)
+
     citation_id_list = list()
 
     for id in reference_id_list:
@@ -79,15 +80,15 @@ def get_candidate_dict(id_list, excluded_id_list, candidate_size):
     abstract_dict = find_year.get_abstract(list(abstract_set))
     return candidate_dict, abstract_dict
 
+if __name__ == "__main__":
+    excluded_ids = ["2123991323", "23142202", "1483005138"]
+    # id_list = ["5", "100008599", "100008278", "100007563"]
 
-excluded_ids = ["2123991323", "23142202", "1483005138"]
-# id_list = ["5", "100008599", "100008278", "100007563"]
+    id_list = find_year.find_year(2009, 5, 0)
 
-id_list = find_year.find_year(2009, 5, 0)
+    candidate_dict, abstract_dict = get_candidate_dict(id_list, excluded_ids, 10)
+    print(candidate_dict)
+    print(len(candidate_dict))
 
-candidate_dict, abstract_dict = get_candidate_dict(id_list, excluded_ids, 10)
-print(candidate_dict)
-print(len(candidate_dict))
-
-# print(abstract_dict)
-print(len(abstract_dict))
+    # print(abstract_dict)
+    print(len(abstract_dict))
