@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 
+from tqdm import tqdm
 from util import dump_json, load_json, EnglishTextProcessor
 
 class ArticleDataset():
@@ -30,7 +31,7 @@ class AminerDataset(ArticleDataset):
 
 		data = []
 		with open(articles_text_file_path) as articles_text_file:
-			for line in articles_text_file:
+			for i, line in tqdm(enumerate(articles_text_file)):
 				entry = json.loads(line)
 				if all([field in entry and entry[field] is not None for field in relevant_fields]):
 					data += [{
@@ -38,12 +39,13 @@ class AminerDataset(ArticleDataset):
 						'title': entry['title'],
 						'year': entry['year'],
 						'abstract': self.text_processor(indexed_abstract_to_text(entry['indexed_abstract'])),
-						'references': entry['references']
+						'references': entry['references'],
+						'fos': [self.text_processor(fos['name']) for fos in entry['fos']] if 'fos' in entry else []
 					}]
 
 		return data
 
-class CoreDataset():
+class CoreDataset(ArticleDataset):
 	def __init__(self, stop_words_file, relevant_fields, articles_text_file_path):
 		'''
 		relevant_fields: 'id', 'title', 'year', 'description', 'fullText', 'citations'
