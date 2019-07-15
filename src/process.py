@@ -2,6 +2,20 @@ import get_candidates
 import find_year
 import json
 
+def read_candidate_citations():
+    filename = "../output_data.json"
+    with open(filename, "rt") as fp:
+        content = json.load(fp)
+
+    candidates = {}
+    for c in content:
+        for key in c:
+            candidates[key] = c[key]
+
+    return candidates
+
+
+
 if __name__ == '__main__':
     content = []
     with open("../ids.txt") as f:
@@ -23,9 +37,4 @@ if __name__ == '__main__':
 
     with open(filename, mode='w', encoding='utf-8') as feedsjson:        
         json.dump(feeds, feedsjson)
-
-
-    
-
-
 
