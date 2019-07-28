@@ -6,8 +6,9 @@ def find_by_id(id):
     # We should probably not be connecting each time.
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match" : {"id": id}}})
+    res = es.search(index="aminer", body={"query": {"match": {"id": id}}})
     return res
+
 
 def fos_similarity(id_1, id_2):
     id_1_res = find_by_id(id_1)
@@ -23,7 +24,7 @@ def fos_similarity(id_1, id_2):
     else:
         print("Found too many id 1")
         return
-    
+
     if id_2_res["hits"]["total"]["value"]:
         print("Did not find id 2")
         return
@@ -43,12 +44,59 @@ def fos_similarity(id_1, id_2):
         if fos["name"] in all_fos:
             in_both += 1
         all_fos.add(fos["name"])
-        
+
     return in_both / len(all_fos)
 
 
-    
+def extract_fos_list_from_id(id):
+    res = find_by_id(id)
+    papers = res['hits']['hits']
+    fos_list = list()
 
-    
-    
-    
+    if len(papers) != 0:
+        fos = papers[0]['_source']['fos']
+        fos_list = [d['name'] for d in fos if 'name' in d]
+
+    return fos_list
+
+
+def get_papers_matching_fos(fos_list):
+    id_set = set()
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+    for fos in fos_list:
+        res = es.search(index="aminer", body={
+            "_source": ["id"],
+            "size": 10000,
+            "query": {
+                "bool" : {
+                    "must": [
+                        { "match": {"fos.name": fos}}
+                    ]
+                }
+            }
+        })
+
+        papers = res['hits']['hits']
+        print(len(papers))
+        for paper in papers:
+            id_set.add(paper['_source']['id'])
+
+    return list(id_set)
+
+
+def build_fos_dict(id_list):
+    fos_dict = dict()
+    for id in id_list:
+        fos_list = extract_fos_list_from_id(id)
+        matching_id_list = get_papers_matching_fos(fos_list)
+
+        fos_dict[id] = matching_id_list
+    return fos_dict
+
+
+
+with open('/home/carson/Citations/ids.txt') as f:
+    paper_ids = f.read().splitlines()
+
+print(build_fos_dict(paper_ids))
