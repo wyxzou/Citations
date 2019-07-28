@@ -1,5 +1,15 @@
 import es_request
 import logging
+import json
+import argparse
+import logging
+import imp
+import time
+import math
+import re
+import os
+import sys
+import json
 
 
 def find_by_id(id):
@@ -67,7 +77,7 @@ def get_papers_matching_fos(fos_list):
     for fos in fos_list:
         res = es.search(index="aminer", body={
             "_source": ["id"],
-            "size": 10000,
+            "size": 5000,
             "query": {
                 "bool" : {
                     "must": [
@@ -75,13 +85,17 @@ def get_papers_matching_fos(fos_list):
                     ]
                 }
             }
-        })
+        }, scroll='2m')
 
-        papers = res['hits']['hits']
-        print(len(papers))
-        for paper in papers:
-            id_set.add(paper['_source']['id'])
+        while res['hits']['hits'] and len(res['hits']['hits']) > 0:
+            for hit in res['hits']['hits']:
+                id_set.add(hit['_source']['id'])
 
+            # get es scroll id
+            scroll_id = res['_scroll_id']
+            # use es scroll api
+            res = es.scroll(scroll_id=scroll_id, scroll='2m',
+                            request_timeout=10)
     return list(id_set)
 
 
@@ -96,7 +110,8 @@ def build_fos_dict(id_list):
 
 
 
-with open('/home/carson/Citations/ids.txt') as f:
+with open('../ids.txt') as f:
     paper_ids = f.read().splitlines()
 
+a_list = ['100240206', '100129314', '10035428']
 print(build_fos_dict(paper_ids))
