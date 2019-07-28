@@ -1,16 +1,5 @@
 import es_request
 import logging
-import json
-import argparse
-import logging
-import imp
-import time
-import math
-import re
-import os
-import sys
-import json
-
 
 def find_by_id(id):
     # We should probably not be connecting each time.
@@ -113,5 +102,4 @@ def build_fos_dict(id_list):
 with open('../ids.txt') as f:
     paper_ids = f.read().splitlines()
 
-a_list = ['100240206', '100129314', '10035428']
 print(build_fos_dict(paper_ids))
