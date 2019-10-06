@@ -1,11 +1,6 @@
 """
- Notes:
- -The query in get_fos_counter does not have the intended behaviour, but I'm not yet sure why (Maybe we require nested queries?). get_author_counter, and get_keyword_counter are also probably wrong.
- -What are some examples where the 'keywords' field is populated?, because I haven't found any yet.
- -It should be possible to get the highest ranking items in a single query. However, to do this we might need to set some fields to 'stored' in the mapping, and then recreate the index? Possibly relevant links:
- https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-script-score-query.html
- https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting.html
- https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html
+ - The query in get_fos_counter does not have the intended behaviour, but I'm not yet sure why (Maybe we require nested queries?). get_author_counter, and get_keyword_counter are also probably wrong.
+ - What are some examples where the 'keywords' field is populated?, because I haven't found any yet.
 """
 
 import es_request
@@ -13,6 +8,85 @@ import logging
 from heapq import nlargest
 import collections
 
+"""
+Not working yet. 
+- It should be possible to get the highest ranking items in a single query. The script can't access the values stored inside elasticsearch.
+- I tried to set some fields to 'store' in the mapping, and then recreate the index, but I haven't been able to get it to work yet. 
+- Possibly relevant links:
+ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-script-score-query.html
+ https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting.html
+ https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html
+"""
+def similarity_scores_in_one_query(id, author_coeff, fos_coeff, keyword_coeff):
+    id_set = set()
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+
+    id_res = find_by_id(id)
+    author_list = find_author_list(id_res)
+    fos_list = find_fos_list(id_res)
+    keyword_list = find_keyword_list(id_res)
+
+    res = es.search(index="aminer", body={
+        "_source": ["id"],
+        "size": 5000,
+        "query": {
+            "function_score": {
+                "query": {
+                    "match_all": {}
+                }
+            }
+        },
+        "sort": {
+            "_script": {
+                "type": "number",
+                "script": {
+                    "lang": "painless",
+                    "source": """
+
+                    def author_set1 = new HashSet(); 
+                    for (int i = 0; i < params.author_list.length; ++i) {
+                        author_set1.add(params.author_list[i]);
+                    }
+
+                    def fos_set1 = new HashSet(); 
+                    for (int i = 0; i < params.fos_list.length; ++i) {
+                        fos_set1.add(params.fos_list[i]);
+                    }
+
+                    def keyword_set1 = new HashSet(); 
+                    for (int i = 0; i < params.keyword_list.length; ++i) {
+                        keyword_set1.add(params.keyword_list[i]);
+                    }
+
+                    def author_set2 = new HashSet(); 
+                    def fos_set2 = new HashSet(); 
+                    def keyword_set2 = new HashSet(); 
+
+                    author_set1.retainAll(author_set2);
+                    fos_set1.retainAll(fos_set2);
+                    keyword_set1.retainAll(keyword_set2);
+
+                    int author_matches = author_set1.size(); 
+                    int fos_matches = fos_set1.size();  
+                    int keyword_matches =  keyword_set1.size();                     
+                    _score + author_matches * params.author_coeff  + fos_matches * params.fos_coeff + keyword_matches * params.keyword_coeff;
+                    """,
+                    "params": {
+                        "author_coeff": author_coeff,
+                        "fos_coeff": fos_coeff,
+                        "keyword_coeff": keyword_coeff,
+                        "author_list": author_list,
+                        "fos_list": fos_list,
+                        "keyword_list": keyword_list
+                    }
+                },
+                "order": "asc"
+            }
+        }
+    }, scroll='2m')
+
+    return res
 
 # Not used. Function calculates the score between two ids.
 def individual_score_calculation(id_1, id_2, author_coeff, fos_coeff, keyword_coeff):
@@ -183,6 +257,7 @@ def find_by_id(id):
 
 def find_author_list(res):
     papers = res['hits']['hits']
+    author_list = list()
 
     if len(papers) != 0:
         authors = papers[0]['_source']['authors']
@@ -193,6 +268,7 @@ def find_author_list(res):
 
 def find_fos_list(res):
     papers = res['hits']['hits']
+    fos_list = list()
 
     if len(papers) != 0:
         fos = papers[0]['_source']['fos']
@@ -203,6 +279,7 @@ def find_fos_list(res):
 
 def find_keyword_list(res):
     papers = res['hits']['hits']
+    keyword_list = list()
 
     if len(papers) != 0:
         keyword_list = papers[0]['_source']['keywords']
@@ -261,3 +338,7 @@ def get_highest_ranking_papers(id, author_coeff, fos_coeff, keyword_coeff, num_t
 # Example using id = 101132528
 n_highest_ranking = get_highest_ranking_papers(101132528, 1, 1, 1, 1000)
 print(n_highest_ranking)
+
+
+## Not working yet. The script can't access the values stored inside elasticsearch.
+# print(similarity_scores_in_one_query(100008278, 5.6, 2.1, 0.9))
