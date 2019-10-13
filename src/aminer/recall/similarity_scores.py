@@ -3,10 +3,11 @@
  - What are some examples where the 'keywords' field is populated?, because I haven't found any yet.
 """
 
-import es_request
 import logging
 from heapq import nlargest
 import collections
+
+import src.aminer.dataset.es_request as es_request
 
 """
 Not working yet. 

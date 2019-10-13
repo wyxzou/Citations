@@ -1,20 +1,30 @@
-import es_request
 import logging
 import random
 import sys
 
-# year: papers from which year we want
-# num_papers: number of papers we want to find
-# num_citations: the minimum number of citations we want each pulled paper to have
-# returns: a array of paper ids to pull
+import src.aminer.dataset.es_request as es_request
+
+
 def find_year(year, num_papers, num_citations):
+    """
+    Finds a list of paper ids based on year criteria
+
+    :param year: int
+        which year we want our papers from
+    :param num_papers:
+        number of papers we want to find
+    :param num_citations:
+        minimum number of citations we want each paper to have
+    :return:
+        an array of paper ids with satisfied conditions
+    """
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
     res = es.search(index="aminer", body={
         "_source": ["id", "references"],
         "size": 10000,
         "query": {"match": {"year": year}
-        }
+                  }
     })
 
     if len(res['hits']['hits']) == 0:
@@ -35,13 +45,20 @@ def find_year(year, num_papers, num_citations):
             reference_count = len(reference_list)
 
         if reference_count >= num_citations:
-             id_list.append(updated[i]['_source']['id'])
+            id_list.append(updated[i]['_source']['id'])
 
     return id_list
 
 
-
 def get_abstract(paperids):
+    """
+    Gets the abstract of papers with the provided list of ids
+
+    :param paperids: list[int]
+        The list of paper ids to find the abstract for
+    :return:
+        Dictionary with paper id as key and abstract as value
+    """
     es = es_request.connect_elasticsearch()
 
     dic = {}

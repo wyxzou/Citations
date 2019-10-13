@@ -1,8 +1,10 @@
-import es_request
-import find_year
 import logging
 import random
 import sys
+
+import src.aminer.dataset.es_request as es_request
+import src.aminer.recall.find_year as find_year
+
 
 def get_references(paper_id):
     logging.basicConfig(level=logging.ERROR)
@@ -14,6 +16,7 @@ def get_references(paper_id):
 
     reference_list = res['hits']['hits'][0]['_source']['references']
     return reference_list
+
 
 def get_random_id():
     logging.basicConfig(level=logging.ERROR)
@@ -74,11 +77,10 @@ def get_candidate_dict(id_list, excluded_id_list, candidate_size):
         for v in value:
             abstract_set.add(v)
 
-
-
     # print(key_and_value_ids)
     abstract_dict = find_year.get_abstract(list(abstract_set))
     return candidate_dict, abstract_dict
+
 
 if __name__ == "__main__":
     excluded_ids = ["2123991323", "23142202", "1483005138"]

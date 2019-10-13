@@ -1,5 +1,6 @@
-import es_request
 import logging
+import src.aminer.dataset.es_request as es_request
+
 
 def find_by_id(id):
     # We should probably not be connecting each time.
@@ -68,9 +69,9 @@ def get_papers_matching_fos(fos_list):
             "_source": ["id"],
             "size": 5000,
             "query": {
-                "bool" : {
+                "bool": {
                     "must": [
-                        { "match": {"fos.name": fos}}
+                        {"match": {"fos.name": fos}}
                     ]
                 }
             }
@@ -96,7 +97,6 @@ def build_fos_dict(id_list):
 
         fos_dict[id] = matching_id_list
     return fos_dict
-
 
 
 with open('../ids.txt') as f:
