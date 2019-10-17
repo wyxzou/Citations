@@ -3,7 +3,11 @@ import logging
 import json
 
 def connect_elasticsearch():
-    _es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+    _es = Elasticsearch([{
+        'host': 'search-citations-ghefsq7dfzjf6s4sexcn2efu7i.ca-central-1.es.amazonaws.com',
+        'port': 80
+    }])
+    # _es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
     if _es.ping():
         print('Yay Connect')
     else:
@@ -52,8 +56,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR)
     es = connect_elasticsearch()
     # Uncomment the below two lines to generate and populate the index
-    data = gendata()
-    helpers.bulk(es, data)
+    # data = gendata()
+    # helpers.bulk(es, data)
 
     # To search for lines in aminer index with empty query
     # res = es.search(index="aminer", body="")
@@ -62,9 +66,7 @@ if __name__ == '__main__':
     #    print(i)
 
     # To search for lines in aminer index with specific id
-    # res = es.search(index="aminer", body={"query": {"match" : {"id": "100008749"}}})
-    # print("Found ", res["hits"]["total"]["value"])
-    # for i in res["hits"]["hits"]:
-    #     print(i)
-    
-    
+    res = es.search(index="aminer", body={"query": {"match" : {"id": "100008749"}}})
+    print("Found ", res["hits"]["total"]["value"])
+    for i in res["hits"]["hits"]:
+        print(i)

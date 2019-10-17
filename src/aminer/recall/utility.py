@@ -1,8 +1,6 @@
 import json
 
-import src.aminer.recall.get_candidates as get_candidates
-import src.aminer.recall.find_year as find_year
-
+import aminer.recall.get_candidates as get_candidates
 
 def read_citation_of_papers(filename):
     """

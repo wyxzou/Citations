@@ -2,8 +2,8 @@ import logging
 import random
 import sys
 
-import src.aminer.dataset.es_request as es_request
-import src.aminer.recall.find_year as find_year
+import aminer.dataset.es_request as es_request
+import aminer.recall.find_year as find_year
 
 
 def get_references(paper_id):

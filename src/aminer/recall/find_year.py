@@ -1,8 +1,11 @@
+import sys
+sys.path.append("/to/your/src/")
+
 import logging
 import random
-import sys
 
-import src.aminer.dataset.es_request as es_request
+
+import aminer.dataset.es_request as es_request
 
 
 def find_year(year, num_papers, num_citations):
@@ -73,6 +76,7 @@ def get_abstract(paperids):
 
 
 if __name__ == '__main__':
+
     ids = find_year(2015, 5, 2)
     print(ids)
     print(get_abstract(ids))

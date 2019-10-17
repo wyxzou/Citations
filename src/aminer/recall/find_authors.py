@@ -1,7 +1,7 @@
 import logging
 import json
 
-import src.aminer.es_request as es_request
+import aminer.es_request as es_request
 
 # ground truth and pool are a list of ids
 def num_included(ground_truth, pool):

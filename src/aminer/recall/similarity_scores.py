@@ -89,6 +89,7 @@ def similarity_scores_in_one_query(id, author_coeff, fos_coeff, keyword_coeff):
 
     return res
 
+
 # Not used. Function calculates the score between two ids.
 def individual_score_calculation(id_1, id_2, author_coeff, fos_coeff, keyword_coeff):
     id_1_res = find_by_id(id_1)

@@ -1,5 +1,5 @@
 import logging
-import src.aminer.dataset.es_request as es_request
+import aminer.dataset.es_request as es_request
 
 
 def find_by_id(id):
