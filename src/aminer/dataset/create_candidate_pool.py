@@ -1,21 +1,57 @@
+import sys
+sys.path.append("/to/your/src/")
+
 import logging
 import random
-import sys
 
 import aminer.dataset.es_request as es_request
-import aminer.recall.find_year as find_year
+import aminer.dataset.create_candidate_pool as find_year
+import aminer.recall.query_es as query_on_paper_id
 
 
-def get_references(paper_id):
+def query_papers_by_year(year, num_papers, num_citations):
+    """
+    Finds a list of paper ids based on year criteria
+
+    :param year: int
+        which year we want our papers from
+    :param num_papers:
+        number of papers we want to find
+    :param num_citations:
+        minimum number of citations we want each paper to have
+    :return:
+        an array of paper ids with satisfied conditions
+    """
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+    res = es.search(index="aminer", body={
+        "_source": ["id", "references"],
+        "size": 10000,
+        "query": {"match": {"year": year}
+                  }
+    })
 
     if len(res['hits']['hits']) == 0:
-        return list()
+        return None
 
-    reference_list = res['hits']['hits'][0]['_source']['references']
-    return reference_list
+    id_list = list()
+    updated = res['hits']['hits']
+    random.shuffle(updated)
+    for i in range(0, len(updated)):
+        if len(id_list) >= num_papers:
+            break
+
+        reference_count = 0
+        if len(res['hits']['hits']) == 0:
+            reference_count = 0
+        else:
+            reference_list = updated[0]['_source']['references']
+            reference_count = len(reference_list)
+
+        if reference_count >= num_citations:
+            id_list.append(updated[i]['_source']['id'])
+
+    return id_list
 
 
 def get_random_id():
@@ -41,7 +77,7 @@ def get_random_id():
 
 
 def get_candidate_set(id, excluded_id_list, candidate_size):
-    reference_id_list = get_references(id)
+    reference_id_list = query_on_paper_id.get_references_by_pid(id)
 
     citation_id_list = list()
 

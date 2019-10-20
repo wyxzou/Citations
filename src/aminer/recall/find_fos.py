@@ -1,18 +1,11 @@
 import logging
 import aminer.dataset.es_request as es_request
-
-
-def find_by_id(id):
-    # We should probably not be connecting each time.
-    logging.basicConfig(level=logging.ERROR)
-    es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match": {"id": id}}})
-    return res
+import aminer.recall.query_es as query_on_paper_id
 
 
 def fos_similarity(id_1, id_2):
-    id_1_res = find_by_id(id_1)
-    id_2_res = find_by_id(id_2)
+    id_1_res = query_on_paper_id.get_es_object_by_pid(id_1)
+    id_2_res = query_on_paper_id.get_es_object_by_pid(id_2)
     id_1_fos = None
     id_2_fos = None
 
@@ -49,7 +42,7 @@ def fos_similarity(id_1, id_2):
 
 
 def extract_fos_list_from_id(id):
-    res = find_by_id(id)
+    res = query_on_paper_id.get_es_object_by_pid(id)
     papers = res['hits']['hits']
     fos_list = list()
 

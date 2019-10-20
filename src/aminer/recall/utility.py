@@ -1,6 +1,24 @@
 import json
 
-import aminer.recall.get_candidates as get_candidates
+import aminer.dataset.create_candidate_pool as create_candidate_pool
+
+
+def get_ids_from_es_object(res):
+    """
+    Return list of ids of paper given an Elasticsearch results object
+
+    :param res: Elasticsearch results object
+        The author id
+
+    :return:
+        Results object with list of papers
+    """
+    ids = []
+    for doc in res['hits']['hits']:
+        ids.append(doc['_source']['id'])
+
+    return ids
+
 
 def read_citation_of_papers(filename):
     """
@@ -43,7 +61,7 @@ def find_citation_of_papers(input_file, output_file):
     feeds = []
     ids_group = []
     for pid in content:
-        candidate_dict, abstract_dict = get_candidates.get_candidate_dict([pid], [], 10)
+        candidate_dict, abstract_dict = create_candidate_pool.get_candidate_dict([pid], [], 10)
         feeds.append(candidate_dict)
 
     with open(output_file, mode='w', encoding='utf-8') as feedsjson:
