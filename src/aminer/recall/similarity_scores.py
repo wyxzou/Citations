@@ -7,19 +7,31 @@ import logging
 from heapq import nlargest
 import collections
 
-import src.aminer.dataset.es_request as es_request
+import es_request as es_request
 
-"""
-Not working yet. 
-- It should be possible to get the highest ranking items in a single query. The script can't access the values stored inside elasticsearch.
-- I tried to set some fields to 'store' in the mapping, and then recreate the index, but I haven't been able to get it to work yet. 
-- Possibly relevant links:
- https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-script-score-query.html
- https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting.html
- https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html
-"""
+
 def similarity_scores_in_one_query(id, author_coeff, fos_coeff, keyword_coeff):
-    id_set = set()
+    """
+    Not working yet.
+    - It should be possible to get the highest ranking items in a single query. The script can't access the values stored inside elasticsearch.
+    - I tried to set some fields to 'store' in the mapping, and then recreate the index, but I haven't been able to get it to work yet.
+    - Possibly relevant links:
+     https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-script-score-query.html
+     https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting.html
+     https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html
+
+    :param id: int
+        the id of the search paper
+    :param author_coeff: float
+        score multiplier for the number of authors
+    :param fos_coeff: float
+        score multiplier for the number of fos
+    :param keyword_coeff: float
+        score multiplier for the number of keywords
+    :return res: elasticsearch result
+        Elasticsearch result that contains the information for n highest scoring papers
+    """
+
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
 
@@ -44,30 +56,24 @@ def similarity_scores_in_one_query(id, author_coeff, fos_coeff, keyword_coeff):
                 "script": {
                     "lang": "painless",
                     "source": """
-
                     def author_set1 = new HashSet(); 
                     for (int i = 0; i < params.author_list.length; ++i) {
                         author_set1.add(params.author_list[i]);
                     }
-
                     def fos_set1 = new HashSet(); 
                     for (int i = 0; i < params.fos_list.length; ++i) {
                         fos_set1.add(params.fos_list[i]);
                     }
-
                     def keyword_set1 = new HashSet(); 
                     for (int i = 0; i < params.keyword_list.length; ++i) {
                         keyword_set1.add(params.keyword_list[i]);
                     }
-
                     def author_set2 = new HashSet(); 
                     def fos_set2 = new HashSet(); 
                     def keyword_set2 = new HashSet(); 
-
                     author_set1.retainAll(author_set2);
                     fos_set1.retainAll(fos_set2);
                     keyword_set1.retainAll(keyword_set2);
-
                     int author_matches = author_set1.size(); 
                     int fos_matches = fos_set1.size();  
                     int keyword_matches =  keyword_set1.size();                     
@@ -90,60 +96,69 @@ def similarity_scores_in_one_query(id, author_coeff, fos_coeff, keyword_coeff):
     return res
 
 
-# Not used. Function calculates the score between two ids.
-def individual_score_calculation(id_1, id_2, author_coeff, fos_coeff, keyword_coeff):
-    id_1_res = find_by_id(id_1)
-    id_2_res = find_by_id(id_2)
-    author_matches = 0
-    fos_matches = 0
-    keyword_matches = 0
-
-    if id_1_res["hits"]["total"]["value"] == 0:
-        print("Did not find id 1")
-        return
-    else:
-        id_1_source = id_1_res["hits"]["hits"][0]['_source']
-        id_1_authors = id_1_source["authors"]
-        id_1_fos = id_1_source["fos"]
-        id_1_keywords = id_1_source["keywords"]
-
-    if id_2_res["hits"]["total"]["value"] == 0:
-        print("Did not find id 2")
-        return
-    else:
-        id_2_source = id_2_res["hits"]["hits"][0]['_source']
-        id_2_authors = id_2_source["authors"]
-        id_2_fos = id_2_source["fos"]
-        id_2_keywords = id_2_source["keywords"]
-
-    id_1_authors_set = set()
-    id_1_fos_set = set()
-    id_1_keywords_set = set(id_1_keywords)
-
-    for author in id_1_authors:
-        id_1_authors_set.add(author["id"])
-
-    for author in id_2_authors:
-        if author["id"] in id_1_authors_set:
-            author_matches += 1
-
-    for fos in id_1_fos:
-        id_1_fos_set.add(fos["name"])
-
-    for fos in id_2_fos:
-        if fos["name"] in id_1_fos_set:
-            fos_matches += 1
-
-    for keyword in id_2_keywords:
-        if keyword in id_1_keywords_set:
-            keyword_matches += 1
-
-    print(str(author_matches) + " " + str(fos_matches) + " " + str(keyword_matches))
-    total_score = author_coeff * author_matches + fos_coeff * fos_matches + keyword_coeff * keyword_matches
-    return total_score
+# # Not used. Function calculates the score between two ids.
+# def individual_score_calculation(id_1, id_2, author_coeff, fos_coeff, keyword_coeff):
+#     id_1_res = find_by_id(id_1)
+#     id_2_res = find_by_id(id_2)
+#     author_matches = 0
+#     fos_matches = 0
+#     keyword_matches = 0
+#
+#     if id_1_res["hits"]["total"]["value"] == 0:
+#         print("Did not find id 1")
+#         return
+#     else:
+#         id_1_source = id_1_res["hits"]["hits"][0]['_source']
+#         id_1_authors = id_1_source["authors"]
+#         id_1_fos = id_1_source["fos"]
+#         id_1_keywords = id_1_source["keywords"]
+#
+#     if id_2_res["hits"]["total"]["value"] == 0:
+#         print("Did not find id 2")
+#         return
+#     else:
+#         id_2_source = id_2_res["hits"]["hits"][0]['_source']
+#         id_2_authors = id_2_source["authors"]
+#         id_2_fos = id_2_source["fos"]
+#         id_2_keywords = id_2_source["keywords"]
+#
+#     id_1_authors_set = set()
+#     id_1_fos_set = set()
+#     id_1_keywords_set = set(id_1_keywords)
+#
+#     for author in id_1_authors:
+#         id_1_authors_set.add(author["id"])
+#
+#     for author in id_2_authors:
+#         if author["id"] in id_1_authors_set:
+#             author_matches += 1
+#
+#     for fos in id_1_fos:
+#         id_1_fos_set.add(fos["name"])
+#
+#     for fos in id_2_fos:
+#         if fos["name"] in id_1_fos_set:
+#             fos_matches += 1
+#
+#     for keyword in id_2_keywords:
+#         if keyword in id_1_keywords_set:
+#             keyword_matches += 1
+#
+#     print(str(author_matches) + " " + str(fos_matches) + " " + str(keyword_matches))
+#     total_score = author_coeff * author_matches + fos_coeff * fos_matches + keyword_coeff * keyword_matches
+#     return total_score
 
 
 def get_author_counter(author_list):
+    """
+    Takes in a list of authors and returns a counter
+
+    :param author_list: list of Strings
+        list of author ids
+    :return author_counter: Counter
+        Counter where key=id, value=# of matching authors
+    """
+
     author_counter = collections.Counter()
 
     logging.basicConfig(level=logging.ERROR)
@@ -179,6 +194,15 @@ def get_author_counter(author_list):
 
 
 def get_fos_counter(fos_list):
+    """
+    Takes in a list of fos and returns a counter
+
+    :param fos_list: list of Strings
+        list of fos names
+    :return fos_counter: Counter
+        Counter where key=id, value=# of matching fos
+    """
+
     fos_counter = collections.Counter()
 
     logging.basicConfig(level=logging.ERROR)
@@ -215,6 +239,15 @@ def get_fos_counter(fos_list):
 
 
 def get_keyword_counter(keyword_list):
+    """
+    Takes in a list of keywords and returns a counter
+
+    :param keyword_list: list of Strings
+        list of keywords
+    :return keyword_counter: Counter
+        Counter where key=id, value=# of matching keyword
+    """
+
     keyword_counter = collections.Counter()
 
     logging.basicConfig(level=logging.ERROR)
@@ -250,6 +283,15 @@ def get_keyword_counter(keyword_list):
 
 
 def find_by_id(id):
+    """
+    Takes in a list of keywords and returns a counter
+
+    :param id: int
+        the id of the search paper
+    :return res: elasticsearch result
+        Elasticsearch result that contains the information for the entered id
+    """
+
     # We should probably not be connecting each time.
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
@@ -258,6 +300,15 @@ def find_by_id(id):
 
 
 def find_author_list(res):
+    """
+    Extracts the author list from the entered Elasticsearch result
+
+    :param  res: Elasticsearch result
+        Elasticsearch result that contains the information for a paper
+    :return author_list: list of Strings
+        list of author ids
+    """
+
     papers = res['hits']['hits']
     author_list = list()
 
@@ -269,6 +320,15 @@ def find_author_list(res):
 
 
 def find_fos_list(res):
+    """
+    Extracts the fos list from the entered Elasticsearch result
+
+    :param  res: Elasticsearch result
+        Elasticsearch result that contains the information for a paper
+    :return fos_list: list of Strings
+        list of fos ids
+    """
+
     papers = res['hits']['hits']
     fos_list = list()
 
@@ -280,6 +340,15 @@ def find_fos_list(res):
 
 
 def find_keyword_list(res):
+    """
+    Extracts the keyword list from the entered Elasticsearch result
+
+    :param  res: Elasticsearch result
+        Elasticsearch result that contains the information for a paper
+    :return keyword_list: list of Strings
+        list of keyword ids
+    """
+
     papers = res['hits']['hits']
     keyword_list = list()
 
@@ -289,8 +358,26 @@ def find_keyword_list(res):
     return keyword_list
 
 
-# Returns a dict of scores for the given counters and coefficients
 def calculate_scores(author_counter, fos_counter, keyword_counter, author_coeff, fos_coeff, keyword_coeff):
+    """
+    Returns a dict of scores for the given counters and coefficients
+
+    :param author_counter: Counter
+        Counter where key=id, value=# of matching fos
+    :param fos_counter: Counter
+        Counter where key=id, value=# of matching fos
+    :param keyword_counter: Counter
+        Counter where key=id, value=# of matching fos
+    :param author_coeff: float
+        score multiplier for the number of authors
+    :param fos_coeff: float
+        score multiplier for the number of fos
+    :param keyword_coeff: float
+        score multiplier for the number of keywords
+    :return score_dict: dict
+        dict where key=id, value=score
+    """
+
     score_dict = dict()
 
     for k in author_counter.keys():
@@ -314,8 +401,16 @@ def calculate_scores(author_counter, fos_counter, keyword_counter, author_coeff,
     return score_dict
 
 
-# Returns a list of the highest ranking papers
-def get_highest_ranking_papers(id, author_coeff, fos_coeff, keyword_coeff, num_to_return):
+def evaluate_candidate_set_sizes(id, author_coeff, fos_coeff, keyword_coeff):
+    """
+    Prints the number of ground truth in the candidate set for different candidate set sizes
+
+    :param  res: Elasticsearch result
+        Elasticsearch result that contains the information for a paper
+    :return keyword_list: list of Strings
+        list of keyword ids
+    """
+
     id_res = find_by_id(id)
 
     author_list = find_author_list(id_res)
@@ -327,20 +422,73 @@ def get_highest_ranking_papers(id, author_coeff, fos_coeff, keyword_coeff, num_t
     keyword_counter = get_keyword_counter(keyword_list)
 
     score_dict = calculate_scores(author_counter, fos_counter, keyword_counter, author_coeff, fos_coeff, keyword_coeff)
-
+    print(len(score_dict))
     id_string = str(id)
     if id_string in score_dict.keys():
         del score_dict[id_string]
 
-    highest_ranking_list = nlargest(num_to_return, score_dict, key=score_dict.get)
+    es = es_request.connect_elasticsearch()
 
-    return highest_ranking_list
+    res = es.search(index="aminer", body={"query": {"match": {"id": id}}})
+
+    references = res['hits']['hits'][0]['_source']['references']
+
+    count = 0
+    for r in references:
+        res = es.search(index="aminer", body={"query": {"match": {"id": r}}})
+        if not res['hits']['hits']:
+            count += 1
+
+    number_in_index = len(references) - count
+
+    print("id: " + str(id))
+    print("# of papers with 1 or more matching authors: " + str(len(author_counter)))
+    print("# of papers with 1 or more matching fos: " + str(len(fos_counter)))
+    print("# of references: " + str(len(references)))
+    print("# of references in index: " + str(number_in_index))
+
+    top100 = nlargest(100, score_dict, key=score_dict.get)
+    top300 = nlargest(300, score_dict, key=score_dict.get)
+    top1000 = nlargest(1000, score_dict, key=score_dict.get)
+    top3000 = nlargest(3000, score_dict, key=score_dict.get)
+    top10000 = nlargest(10000, score_dict, key=score_dict.get)
+    top30000 = nlargest(30000, score_dict, key=score_dict.get)
+    top100000 = nlargest(100000, score_dict, key=score_dict.get)
+
+    print("candidate set size, # of references in the candidate set:")
+    print("100, " + str(number_of_matches(references, top100)))
+    print("300, " + str(number_of_matches(references, top300)))
+    print("1000, " + str(number_of_matches(references, top1000)))
+    print("3000, " + str(number_of_matches(references, top3000)))
+    print("10000, " + str(number_of_matches(references, top10000)))
+    print("30000, " + str(number_of_matches(references, top30000)))
+    print("100000, " + str(number_of_matches(references, top100000)))
 
 
-# Example using id = 101132528
-n_highest_ranking = get_highest_ranking_papers(101132528, 1, 1, 1, 1000)
-print(n_highest_ranking)
+def number_of_matches(a, b):
+    count = 0
+    for i in a:
+        if i in b:
+            count += 1
+
+    return count
 
 
-## Not working yet. The script can't access the values stored inside elasticsearch.
-# print(similarity_scores_in_one_query(100008278, 5.6, 2.1, 0.9))
+def output_tuple_list_to_file(filename, list_of_tuples):
+    """
+    Outputs a list of tuples to a file.
+
+    :param file: String
+    :param list: list of tuples
+    """
+
+    with open(filename, 'w') as fp:
+        fp.write('\n'.join('%s %s' % x for x in list_of_tuples))
+
+
+# Example using id = 1558595774
+# n_highest_ranking = get_highest_ranking_papers(1558595774, 1, 1, 1, 100)
+# print(n_highest_ranking)
+
+
+evaluate_candidate_set_sizes(1558595774, 1, 1, 1)
