@@ -2,6 +2,7 @@ from elasticsearch import Elasticsearch, helpers
 import logging
 import json
 
+
 def connect_elasticsearch():
     _es = Elasticsearch([{
         'host': 'search-citations-ghefsq7dfzjf6s4sexcn2efu7i.ca-central-1.es.amazonaws.com',
@@ -13,6 +14,7 @@ def connect_elasticsearch():
     else:
         print('Awww it could not connect!')
     return _es
+
 
 def gendata():
     json_items = []
@@ -26,7 +28,6 @@ def gendata():
             j = json.loads(line)
             json_items.append(j)
 
-    
     for json_item in json_items:
         dic = {
             "_index": "aminer",
@@ -40,7 +41,6 @@ def gendata():
             "fos" : json_item.get("fos", []),
         }
 
-
         if "indexed_abstract" in json_item:
             k = list(json_item["indexed_abstract"]["InvertedIndex"].keys())
             dic["abstract"] = k
@@ -48,9 +48,9 @@ def gendata():
             dic["abstract"] = []
         
         res.append(dic)
-        
 
     return res
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR)

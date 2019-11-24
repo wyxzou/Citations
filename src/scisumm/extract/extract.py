@@ -2,6 +2,8 @@ import json
 import os
 import pprint
 
+import xml.etree.ElementTree as ET
+
 parentDirectory = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 def extract_json(paper_id):
@@ -20,6 +22,20 @@ def extract_json(paper_id):
 
     return citation_list
 
+
+def extract_abstract(article_id):
+    data_path = os.path.join(parentDirectory, 'dataset', 'top1000_complete')
+    article_directory = os.path.join(data_path, article_id, "Documents_xml", article_id + ".xml")
+    root = ET.parse(article_directory).getroot()
+
+    abstract = []
+    for child in root.find('.//ABSTRACT'):
+        abstract.append(child.text)
+
+    return ' '.join(abstract)
+
 pp = pprint.PrettyPrinter(indent=4)
 pp.pprint(extract_json('A00-1031'))
+
+print(extract_abstract('A00-1031'))
 
