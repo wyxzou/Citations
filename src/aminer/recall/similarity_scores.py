@@ -7,7 +7,7 @@ import logging
 from heapq import nlargest
 import collections
 
-import es_request as es_request
+import aminer.dataset.es_request as es_request
 
 
 def similarity_scores_in_one_query(id, author_coeff, fos_coeff, keyword_coeff):

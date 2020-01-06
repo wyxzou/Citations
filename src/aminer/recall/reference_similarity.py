@@ -1,8 +1,9 @@
 import logging
+import json
 from heapq import nlargest, heappush, heappushpop
-# from scipy.stats import chi2_contingency
 
 import aminer.dataset.es_request as es_request
+import aminer.recall.functions as functions
 
 def find_by_id(id):
     """
@@ -52,7 +53,7 @@ def get_contingency_table(paper1_references, paper2_references):
 
     n12 = paper1_reference_count - n11
     n21 = paper2_reference_count - n11
-    n22 = 4107340 - paper1_reference_count - paper2_reference_count
+    n22 = 4107340 - paper1_reference_count - paper2_reference_count - n11
 
     contingency_table = [[n11, n12],
                          [n21, n22]]
@@ -74,6 +75,8 @@ def get_candidate_set(id, candidate_set_size):
     print_res(id_res)
     reference_list = get_references(id_res)
 
+    arr = dict()
+
     q = []
     id_set = set([str(id)])
 
@@ -83,7 +86,7 @@ def get_candidate_set(id, candidate_set_size):
 
         res = es.search(index="aminer", body={
             "_source": ["id", "references"],
-            "size": 5000,
+            "size": 10000,
             "query": {
                 "bool": {
                     "must": [
@@ -104,14 +107,18 @@ def get_candidate_set(id, candidate_set_size):
                     retrieved_reference_list = hit['_source']['references']
                     number_of_shared_references = len(set(reference_list).intersection(retrieved_reference_list))
                     contingency_table = get_contingency_table(reference_list, retrieved_reference_list)
-                    # chi2, p, dof, ex = chi2_contingency(contingency_table)
-                    # print(str(chi2) + " " + str(p) + " " + str(dof) + " " + str(ex))
-
+                    chi_square = functions.chi_square(contingency_table)
+                    prob, absolute_error = functions.prob(chi_square)
                     id_set.add(id)
+
+                    index = int(id)
+                    print(index)
+                    arr[index] = prob
+
                     if len(q) < candidate_set_size:
-                        heappush(q, (number_of_shared_references, id))
+                        heappush(q, (prob, (id, number_of_shared_references)))
                     else:
-                        heappushpop(q, (number_of_shared_references, id))
+                        heappushpop(q, (prob, (id, number_of_shared_references)))
 
             # use es scroll api
             res = es.scroll(scroll_id=scroll_id, scroll='2m',
@@ -119,11 +126,82 @@ def get_candidate_set(id, candidate_set_size):
 
         es.clear_scroll(body={'scroll_id': scroll_id})
 
+    print(arr)
     return nlargest(candidate_set_size, q)
 
-if __name__ == '__main__':
-    candidate_set = get_candidate_set(2029880715, 100)
-    print(candidate_set)
 
+def compute_score(similarity_dict, id_j):
+    """
+    :param  similarity_dict: dict {string, int}
+        dictionary where the key is the id of the paper, and the value is the cosine similarity
+    :param  id_j: string
+        the id of a paper in AMiner
+    :return score: int
+        the score computed as defined in part III C of
+        https://ieeexplore.ieee.org/document/7279056?fbclid=IwAR2YbsiF_aWB94AX_h413rlAfYqGHuBmEbusuYXSW4m1kW-eNIhxHMf1wFs
+    """
+    numerator = 0
+    denominator = 0
+
+    for id, similarity in similarity_dict.items():
+        res = find_by_id(id)
+        references = get_references(res)
+
+        if id_j in references:
+            numerator += similarity
+
+        denominator += similarity
+
+    return numerator / denominator
+
+
+def get_reference_dict():
+    """
+    :param  similarity_dict: dict {string, int}
+        dictionary where the key is the id of the paper, and the value is the cosine similarity
+    :param  id_j: string
+        the id of a paper in AMiner
+    :return score: int
+        the score computed as defined in part III C of
+        https://ieeexplore.ieee.org/document/7279056?fbclid=IwAR2YbsiF_aWB94AX_h413rlAfYqGHuBmEbusuYXSW4m1kW-eNIhxHMf1wFs
+    """
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+
+    reference_dict = dict()
+
+    res = es.search(index="aminer", body={
+        "_source": ["id", "references"],
+        "size": 10000,
+        "query": {
+            "match_all": {}
+        }
+    }, scroll='2m')
+
+    # get es scroll id
+    scroll_id = res['_scroll_id']
+    while res['hits']['hits'] and len(res['hits']['hits']) > 0:
+        for hit in res['hits']['hits']:
+            id = hit['_source']['id']
+
+            if not id in reference_dict:
+                reference_dict[id] = get_references(res)
+
+        # use es scroll api
+        res = es.scroll(scroll_id=scroll_id, scroll='2m',
+                        request_timeout=10)
+        print(len(reference_dict))
+
+    es.clear_scroll(body={'scroll_id': scroll_id})
+    return reference_dict
+
+
+if __name__ == '__main__':
+    # candidate_set = get_candidate_set(2029880715, 100)
+    # print(candidate_set)
+
+    # print(invert_dict(reference_dict))
     # for paper in candidate_set:
     #     print_res(find_by_id(paper[1]))
+
+    reference_dict = get_reference_dict()

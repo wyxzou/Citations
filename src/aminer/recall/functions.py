@@ -35,9 +35,27 @@ def prob(x):
     """
     return integrate.quad(lambda t: t**(-0.5) * np.exp(-t/2), 0, x) / (np.sqrt(2)*gamma(0.5))
 
+def cosine_similarity(v1, v2):
+    """
+    :param v1: list of integers
+        A list of integers representing a paper vector
+    :param v2: list of integers
+        A list of integers representing a paper vector
+    :return:
+        cosine similarity as defined in part III B of
+        https://ieeexplore.ieee.org/document/7279056?fbclid=IwAR2YbsiF_aWB94AX_h413rlAfYqGHuBmEbusuYXSW4m1kW-eNIhxHMf1wFs
+    """
+    v1_array = np.array(v1)
+    v2_array = np.array(v2)
+    dot = np.dot(v1_array, v2_array)
+    norm_v1 = np.linalg.norm(v1_array)
+    norm_v2 = np.linalg.norm(v2_array)
+    return dot / (norm_v1 * norm_v2)
 
 if __name__ == '__main__':
     print(chi_square([[1, 1],
                       [1, 1]]))
 
     print(prob(0.25)[0])
+    print(cosine_similarity([1, 0, 0], [1, 1, 1]))
+
