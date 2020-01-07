@@ -7,6 +7,34 @@ from os import listdir
 from os.path import isfile, join
 
 
+class ESClient:
+    def __init__(self):
+        super().__init__()
+        self.es = None
+        self.retry_count = 5
+    
+    def init(self):
+        for retry in range(self.retry_count):
+            if self.connect_elasticsearch():
+                break
+
+    def connect_elasticsearch(self):
+        _es = Elasticsearch([
+            'https://search-ccf-x5pb62bjtwybf3wbaeyg2gby4y.us-east-2.es.amazonaws.com'
+        ], use_ssl=True, ca_certs=certifi.where())
+        if _es.ping():
+            self.es = _es
+            return True
+        else:
+            return False
+    
+    def search(self, index, body):
+        if self.es is None:
+            print("Initialize ES first")
+            return None
+        return self.es.search(index=index, body=body)
+
+
 def connect_elasticsearch():
     _es = Elasticsearch([
         'https://search-ccf-x5pb62bjtwybf3wbaeyg2gby4y.us-east-2.es.amazonaws.com'
