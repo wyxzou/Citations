@@ -46,9 +46,7 @@ def connect_elasticsearch():
     return _es
 
 
-def upload_cbcf_vector(pid, similarity):
-    es = connect_elasticsearch()
-
+def upload_cbcf_vector(pid, similarity, es):
     dic = {
         'doc': {
             "vec": similarity,
