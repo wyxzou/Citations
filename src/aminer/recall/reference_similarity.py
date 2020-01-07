@@ -5,6 +5,7 @@ from heapq import nlargest, heappush, heappushpop
 import aminer.dataset.es_request as es_request
 import aminer.recall.functions as functions
 
+
 def find_by_id(id):
     """
     Takes in an id and returns information about it queried from Elasticsearch.
@@ -21,6 +22,7 @@ def find_by_id(id):
     res = es.search(index="aminer", body={"query": {"match": {"id": id}}})
     return res
 
+
 def print_res(res):
     """
         Prints the '_source' field from an Elasticsearch search result
@@ -28,6 +30,7 @@ def print_res(res):
 
     if res['hits']['hits'] and len(res['hits']['hits']) > 0:
         print(res['hits']['hits'][0]['_source'])
+
 
 def get_references(res):
     """
@@ -41,6 +44,7 @@ def get_references(res):
         reference_list = papers[0]['_source']['references']
 
     return reference_list
+
 
 def get_contingency_table(paper1_references, paper2_references):
     """
@@ -58,6 +62,7 @@ def get_contingency_table(paper1_references, paper2_references):
     contingency_table = [[n11, n12],
                          [n21, n22]]
     return contingency_table
+
 
 def get_candidate_set(id, candidate_set_size):
     """
@@ -103,7 +108,7 @@ def get_candidate_set(id, candidate_set_size):
             for hit in res['hits']['hits']:
                 id = hit['_source']['id']
 
-                if not id in id_set:
+                if id not in id_set:
                     retrieved_reference_list = hit['_source']['references']
                     number_of_shared_references = len(set(reference_list).intersection(retrieved_reference_list))
                     contingency_table = get_contingency_table(reference_list, retrieved_reference_list)
@@ -157,13 +162,8 @@ def compute_score(similarity_dict, id_j):
 
 def get_reference_dict():
     """
-    :param  similarity_dict: dict {string, int}
-        dictionary where the key is the id of the paper, and the value is the cosine similarity
-    :param  id_j: string
-        the id of a paper in AMiner
-    :return score: int
-        the score computed as defined in part III C of
-        https://ieeexplore.ieee.org/document/7279056?fbclid=IwAR2YbsiF_aWB94AX_h413rlAfYqGHuBmEbusuYXSW4m1kW-eNIhxHMf1wFs
+    :return reference_dict: dict {string, list of strings}
+        dictionary where the key is a paper id, and value is a list of its references (which are also paper id strings).
     """
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
@@ -184,7 +184,7 @@ def get_reference_dict():
         for hit in res['hits']['hits']:
             id = hit['_source']['id']
 
-            if not id in reference_dict:
+            if id not in reference_dict:
                 reference_dict[id] = get_references(res)
 
         # use es scroll api
@@ -196,12 +196,60 @@ def get_reference_dict():
     return reference_dict
 
 
+def output_index_dict(filename):
+    """
+    :param  filename: string
+        filename of where the index dictionary should be outputted
+    :return index_dict: dict {string, int}
+        dictionary where key is paper id, and value is the vector index.
+    """
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+
+    id_set = set()
+
+    res = es.search(index="aminer", body={
+        "_source": ["id", "references"],
+        "size": 10000,
+        "query": {
+            "match_all": {}
+        }
+    }, scroll='2m')
+
+    # get es scroll id
+    scroll_id = res['_scroll_id']
+    while res['hits']['hits'] and len(res['hits']['hits']) > 0:
+        for hit in res['hits']['hits']:
+            id = hit['_source']['id']
+            id_set.add(id)
+
+        # use es scroll api
+        res = es.scroll(scroll_id=scroll_id, scroll='2m',
+                        request_timeout=10)
+        print(len(id_set))
+
+    es.clear_scroll(body={'scroll_id': scroll_id})
+
+    id_sorted_list = sorted(id_set)
+
+    index_dict = dict()
+    cur_index = 0
+    for id in id_sorted_list:
+        index_dict[id] = cur_index
+        cur_index += 1
+
+    with open(filename, 'w') as fp:
+        fp.write(json.dumps(index_dict))
+    return index_dict
+
+
 if __name__ == '__main__':
     # candidate_set = get_candidate_set(2029880715, 100)
     # print(candidate_set)
 
-    # print(invert_dict(reference_dict))
     # for paper in candidate_set:
     #     print_res(find_by_id(paper[1]))
 
-    reference_dict = get_reference_dict()
+    print(get_reference_dict())
+
+    # output_index_dict("index.json")
