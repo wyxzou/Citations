@@ -36,6 +36,7 @@ def prob(x):
     return integrate.quad(lambda t: t ** (-0.5) * np.exp(-t / 2), 0, x) / (np.sqrt(2) * gamma(0.5))
 
 
+
 def cosine_similarity(v1, v2):
     """
     :param v1: list of integers

@@ -1,5 +1,6 @@
 import logging
 import json
+import numpy as np
 from heapq import nlargest, heappush, heappushpop
 
 import aminer.dataset.es_request as es_request
@@ -243,9 +244,40 @@ def output_index_dict(filename):
     return index_dict
 
 
+def extract_neighbours(pid, percent):
+    """
+    :param pid: int
+        paper id
+    :param percent:
+        percent of references from pid we want for neighbour set
+    :return: list, list
+        first list is our neighbour set (pid we input to our algorithm)
+        second list is the test set (pid we we want to predict)
+        goal is to predict the second list from the first list
+    """
+    id_res = find_by_id(pid)
+    print_res(id_res)
+    reference_list = get_references(id_res)
+
+    neighbour_size = int(len(reference_list)*percent)
+    neighbour_set = []
+    if neighbour_size == len(reference_list) or neighbour_size == 0:
+        print('For paper ', pid, ' the neighbour size is ', neighbour_size, 'This neighbour size cannot be used')
+
+    for i in range(neighbour_size):
+        index = np.random.randint(low=0, high=len(reference_list)-1, size=1)[0]
+
+        neighbour_set.append(reference_list.pop(index))
+
+    return neighbour_set, reference_list
+
+
 if __name__ == '__main__':
     # candidate_set = get_candidate_set(2029880715, 100)
     # print(candidate_set)
+    neighbour_set, reference_list = extract_neighbours(2029880715, 0.5)
+    print(neighbour_set)
+    print(reference_list)
 
     # for paper in candidate_set:
     #     print_res(find_by_id(paper[1]))
@@ -253,3 +285,4 @@ if __name__ == '__main__':
     print(get_reference_dict())
 
     # output_index_dict("index.json")
+
