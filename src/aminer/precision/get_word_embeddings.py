@@ -2,7 +2,7 @@ import sys
 sys.path.append('../..')
 
 from aminer.dataset import es_request
-from aminer.recall.utility import EnglishTextProcessor
+from aminer.precision.utility import EnglishTextProcessor
 from gensim.models import Word2Vec
 from nltk.tokenize import sent_tokenize
 
@@ -14,7 +14,7 @@ def iter_abstract_sentences_processed(es):
 			'query': {
 				'match_all': {}
 			}
-		}, scroll='2m')
+		}, scroll='24h')
 		scroll_id = res['_scroll_id']
 		while res['hits']['hits'] and len(res['hits']['hits']) > 0:
 			for hit in res['hits']['hits']:
@@ -22,12 +22,15 @@ def iter_abstract_sentences_processed(es):
 				yield abstract
 
 			# use es scroll api
-			res = es.scroll(scroll_id=scroll_id, scroll='2m', request_timeout=10)
+			res = es.scroll(scroll_id=scroll_id, scroll='24h', request_timeout=10)
 
 		es.clear_scroll(body={'scroll_id': scroll_id})
 
 	etp = EnglishTextProcessor()
-	for abstract in iter_abstracts(es):
+	for i, abstract in enumerate(iter_abstracts(es)):
+		if i % 10000 == 0:
+			print(i)
+
 		for sentence in sent_tokenize(abstract):
 			yield etp(sentence).split()
 
