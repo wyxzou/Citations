@@ -46,6 +46,22 @@ def connect_elasticsearch():
     return _es
 
 
+def upload_cbcf_vector(pid, similarity):
+    es = connect_elasticsearch()
+
+    dic = {
+        'doc': {
+            "vec": similarity,
+        }
+    }
+
+    if es.exists(index="cbcf_aminer", id=pid):
+        response = es.update(index="cbcf_aminer", id=pid, body=dic)
+    else:
+        response = es.create(index="cbcf_aminer", id=pid, body=dic)
+    return response
+
+
 def gendata(filename):
     """
     convert aminer json file to format that can be bulk loaded into aws elasticsearch
@@ -88,6 +104,7 @@ def gendata(filename):
 
 
 def create_index(index):
+    es = connect_elasticsearch()
     """
     Attempt at creating a mapping for aminer index
     :param index: the index in elasticsearch database
@@ -169,7 +186,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR)
     # es = connect_elasticsearch()
 
-    load_data_incrementally()
+    # load_data_incrementally()
     # Uncomment the below two lines to generate and populate the index
     # data = gendata()
 
@@ -194,3 +211,5 @@ if __name__ == '__main__':
     # print("Found ", res["hits"]["total"]["value"])
     # for i in res["hits"]["hits"]:
     #     print(i)
+
+    upload_cbcf_vector(2029880718, [1, 2, 3])
