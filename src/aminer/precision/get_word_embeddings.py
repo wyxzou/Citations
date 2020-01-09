@@ -29,7 +29,7 @@ def iter_abstract_sentences_processed(es):
 	etp = EnglishTextProcessor()
 	for i, abstract in enumerate(iter_abstracts(es)):
 		if i % 10000 == 0:
-			print(i)
+			print('Batch:', i // 10000)
 
 		for sentence in sent_tokenize(abstract):
 			yield etp(sentence).split()
