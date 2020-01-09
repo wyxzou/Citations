@@ -19,10 +19,14 @@ def chi_square(contingency_table):
 
     n = n11 + n12 + n21 + n22
 
-    a = (abs(n22 * n11 - n12 * n21) - n / 2) / ((n11 + n12) * (n21 + n22))
-    b = (abs(n22 * n11 - n12 * n21) - n / 2) / ((n11 + n21) * (n12 + n22))
+    a = (abs(n22 * n11 - n12 * n21) - n / 2)
 
-    return a * b
+    b = ((n11 + n12) * (n21 + n22)) * ((n11 + n21) * (n12 + n22))
+
+    if b == 0:
+        return 0
+    else:
+        return a * a / b
 
 
 def prob(x):
@@ -34,7 +38,6 @@ def prob(x):
         https://ieeexplore.ieee.org/document/7279056?fbclid=IwAR2YbsiF_aWB94AX_h413rlAfYqGHuBmEbusuYXSW4m1kW-eNIhxHMf1wFs
     """
     return integrate.quad(lambda t: t ** (-0.5) * np.exp(-t / 2), 0, x) / (np.sqrt(2) * gamma(0.5))
-
 
 
 def cosine_similarity(v1, v2):

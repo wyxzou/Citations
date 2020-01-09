@@ -16,7 +16,8 @@ class ESClient:
     def init(self):
         for retry in range(self.retry_count):
             if self.connect_elasticsearch():
-                break
+                return
+        print("Failed to connect to elasticsearch. Try running init again")
 
     def connect_elasticsearch(self):
         _es = Elasticsearch([
@@ -27,6 +28,9 @@ class ESClient:
             return True
         else:
             return False
+
+    def elasticsearch_connection(self):
+        return self.es
     
     def search(self, index, body):
         if self.es is None:
@@ -47,6 +51,14 @@ def connect_elasticsearch():
 
 
 def upload_cbcf_vector(pid, similarity):
+    """
+
+    :param pid: int
+        paper id
+    :param similarity: list
+        vector of similarity between citing paper and all other papers
+    :return:
+    """
     es = connect_elasticsearch()
 
     dic = {
