@@ -28,6 +28,9 @@ class ESClient:
             return True
         else:
             return False
+
+    def elasticsearch_connection(self):
+        return self.es
     
     def search(self, index, body):
         if self.es is None:
