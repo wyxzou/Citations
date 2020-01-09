@@ -16,7 +16,8 @@ class ESClient:
     def init(self):
         for retry in range(self.retry_count):
             if self.connect_elasticsearch():
-                break
+                return
+        print("Failed to connect to elasticsearch. Try running init again")
 
     def connect_elasticsearch(self):
         _es = Elasticsearch([
