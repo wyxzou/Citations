@@ -47,6 +47,14 @@ def connect_elasticsearch():
 
 
 def upload_cbcf_vector(pid, similarity):
+    """
+
+    :param pid: int
+        paper id
+    :param similarity: list
+        vector of similarity between citing paper and all other papers
+    :return:
+    """
     es = connect_elasticsearch()
 
     dic = {

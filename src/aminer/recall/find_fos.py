@@ -92,7 +92,8 @@ def build_fos_dict(id_list):
     return fos_dict
 
 
-with open('../ids.txt') as f:
-    paper_ids = f.read().splitlines()
+with open('../support/ids.txt') as f:
+    paper_ids = f.readlines()
 
-print(build_fos_dict(paper_ids))
+print(paper_ids)
+# print(build_fos_dict(paper_ids))

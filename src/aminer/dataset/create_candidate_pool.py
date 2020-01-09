@@ -1,12 +1,11 @@
 import sys
-sys.path.append("/to/your/src/")
 
 import logging
 import random
 
 import aminer.dataset.es_request as es_request
-import aminer.dataset.create_candidate_pool as find_year
 import aminer.recall.query_es as query_on_paper_id
+
 
 
 def query_papers_by_year(year, num_papers, num_citations):
@@ -25,33 +24,43 @@ def query_papers_by_year(year, num_papers, num_citations):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
     res = es.search(index="aminer", body={
-        "_source": ["id", "references"],
+        "_source": ["id", "references", "abstract"],
         "size": 10000,
         "query": {"match": {"year": year}
                   }
-    })
-
-    if len(res['hits']['hits']) == 0:
-        return None
+    }, scroll='2m')
 
     id_list = list()
-    updated = res['hits']['hits']
-    random.shuffle(updated)
-    for i in range(0, len(updated)):
-        if len(id_list) >= num_papers:
-            break
+    scroll_id = res['_scroll_id']
+    while res['hits']['hits'] and len(res['hits']['hits']) > 0:
+        for hit in res['hits']['hits']:
+            reference_list = hit['_source']['references']
+            abstract = hit['_source']['abstract']
 
-        reference_count = 0
-        if len(res['hits']['hits']) == 0:
-            reference_count = 0
-        else:
-            reference_list = updated[0]['_source']['references']
-            reference_count = len(reference_list)
+            if len(reference_list) >= num_citations:
+                if abstract is not None and len(abstract) > 0:
+                    if check_if_all_papers_have_valid_abstracts(reference_list):
+                        id_list.append(hit['_source']['id'])
 
-        if reference_count >= num_citations:
-            id_list.append(updated[i]['_source']['id'])
+            if len(id_list) > num_papers:
+                break
+
+            res = es.scroll(scroll_id=scroll_id, scroll='2m',
+                            request_timeout=10)
+
+    es.clear_scroll(body={'scroll_id': scroll_id})
 
     return id_list
+
+
+def check_if_all_papers_have_valid_abstracts(paper_ids):
+    abstracts = query_on_paper_id.get_abstract_by_pids(paper_ids)
+
+    for _, abstract in abstracts.items():
+        if abstract is None or len(abstract) == 0:
+            return False
+
+    return True
 
 
 def get_random_id():
@@ -114,7 +123,7 @@ def get_candidate_dict(id_list, excluded_id_list, candidate_size):
             abstract_set.add(v)
 
     # print(key_and_value_ids)
-    abstract_dict = find_year.get_abstract(list(abstract_set))
+    abstract_dict = query_papers_by_year.get_abstract(list(abstract_set))
     return candidate_dict, abstract_dict
 
 
@@ -122,11 +131,16 @@ if __name__ == "__main__":
     excluded_ids = ["2123991323", "23142202", "1483005138"]
     # id_list = ["5", "100008599", "100008278", "100007563"]
 
-    id_list = find_year.find_year(2009, 5, 0)
+    id_list = query_papers_by_year(2017, 100, 20)
 
-    candidate_dict, abstract_dict = get_candidate_dict(id_list, excluded_ids, 10)
-    print(candidate_dict)
-    print(len(candidate_dict))
+    print(id_list)
+
+    # for id in id_list:
+    #     print(query_on_paper_id[id])
+
+    # candidate_dict, abstract_dict = get_candidate_dict(id_list, excluded_ids, 10)
+    # print(candidate_dict)
+    # print(len(candidate_dict))
 
     # print(abstract_dict)
-    print(len(abstract_dict))
+    # print(len(abstract_dict))
