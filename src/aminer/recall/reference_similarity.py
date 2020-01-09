@@ -1,5 +1,6 @@
-import logging
 import json
+import logging
+
 import numpy as np
 
 import aminer.dataset.es_request as es_request
@@ -41,11 +42,21 @@ def find_by_id_cbcf_aminer(id):
 
 
 def extract_prob_vector(res):
+    """
+    Extracts and returns the ['_source']['vec'] field.
+
+    :param  res: json
+        Elasticsearch search result from the cbcf_aminer index
+    """
     return res['hits']['hits'][0]['_source']["vec"]
+
 
 def print_res(res):
     """
-        Prints the '_source' field from an Elasticsearch search result
+    Prints the '_source' field from an Elasticsearch search result
+
+    :param  res: json
+        Elasticsearch search result from the aminer index
     """
 
     if res['hits']['hits'] and len(res['hits']['hits']) > 0:
@@ -54,7 +65,10 @@ def print_res(res):
 
 def extract_references(res):
     """
-        Returns the ['_source']['references'] field from an Elasticsearhc search result
+    Extracts and returns the ['_source']['references'] field.
+
+    :param  res: json
+        Elasticsearch search result from the aminer index
     """
 
     papers = res['hits']['hits']
@@ -69,6 +83,11 @@ def extract_references(res):
 def get_contingency_table(paper1_reference_set, paper2_reference):
     """
     Returns a 2x2 contingency table
+
+    :param  paper1_reference_set: set
+        a set of paper ids for i1
+    :param  paper2_reference: list
+        a list of paper ids for i2
     """
     n11 = len(paper1_reference_set.intersection(paper2_reference))
 
@@ -261,7 +280,7 @@ def output_inverted_index_dict(index_dict, filename):
     """
     :param index_dict: dict
         dictionary of ids to indexes
-    :param filename:
+    :param filename: string
         file path to output inverted index dict
     :return: inverted_dict: dict
         dictionary with the keys and values of the index dict swapped
@@ -316,10 +335,11 @@ def output_json(filename_prefix, min_references):
 def populate_es_association_vectors(references_filename, inverted_index_filename):
     """
     Updates elasticsearch with the association vectors
+
     :param references_filename: string
         file path of a references_list json file
-    :param min_references: int
-        filters out all papers with a number of references less than min_references
+    :param inverted_index_filename: int
+        file path of a inverted_index json file
     """
     with open(references_filename, 'r') as f:
         reference_list = json.load(f)
@@ -328,7 +348,6 @@ def populate_es_association_vectors(references_filename, inverted_index_filename
         inverted_index_dict = json.load(f)
 
     memoized_prob = Memoize(functions.prob)
-    es = es_request.connect_elasticsearch()
 
     index = 0
     for references_a in reference_list:
@@ -337,7 +356,7 @@ def populate_es_association_vectors(references_filename, inverted_index_filename
         print(id)
 
         index += 1
-        es_request.upload_cbcf_vector(id, prob_vector, es)
+        es_request.upload_cbcf_vector(id, prob_vector)
 
 
 if __name__ == '__main__':
