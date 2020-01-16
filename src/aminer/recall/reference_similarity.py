@@ -6,6 +6,8 @@ import numpy as np
 import aminer.dataset.es_request as es_request
 import aminer.recall.functions as functions
 
+folder = "../support/"
+
 
 def find_by_id(id):
     """
@@ -128,112 +130,6 @@ def compute_score(similarity_dict, id_j):
     return numerator / denominator
 
 
-def output_reference_list(filename, index_dict_filename, min_references):
-    """
-    :param  filename: string
-        file path of where the references list should be outputted
-    :param  index_dict_filename: string
-        file path of the index list
-    :param  min_references: int
-        filters out all papers with a number of references less than min_references
-    :return reference_list: list of strings
-        Is a list (organized by index) of lists of references (which are also paper id strings).
-    """
-    logging.basicConfig(level=logging.ERROR)
-    es = es_request.connect_elasticsearch()
-
-    with open(index_dict_filename, 'r') as f:
-        index_dict = json.load(f)
-
-    reference_list = [[]] * len(index_dict)
-    id_set = set()
-
-    res = es.search(index="aminer", body={
-        "_source": ["id", "references"],
-        "size": 10000,
-        "query": {
-            "match_all": {}
-        }
-    }, scroll='2m')
-
-    # get es scroll id
-    scroll_id = res['_scroll_id']
-    while res['hits']['hits'] and len(res['hits']['hits']) > 0:
-        for hit in res['hits']['hits']:
-            id = hit['_source']['id']
-            references = hit['_source']['references']
-
-            if id not in id_set and len(references) >= min_references:
-                references_as_ints = list(map(int, references))
-                reference_list[index_dict[id]] = references_as_ints
-                id_set.add(id)
-
-        print(len(id_set))
-        # use es scroll api
-        res = es.scroll(scroll_id=scroll_id, scroll='2m',
-                        request_timeout=10)
-
-    es.clear_scroll(body={'scroll_id': scroll_id})
-
-    with open(filename, 'w') as fp:
-        json.dump(reference_list, fp)
-    return reference_list
-
-
-def output_index_dict(filename, min_references):
-    """
-    :param  filename: string
-        file path of where the index dictionary should be outputted
-    :param  min_references: int
-        filters out all papers with a number of references less than min_references
-    :return index_dict: dict {string, int}
-        dictionary where key is paper id, and value is the vector index.
-    """
-    logging.basicConfig(level=logging.ERROR)
-    es = es_request.connect_elasticsearch()
-
-    id_set = set()
-
-    res = es.search(index="aminer", body={
-        "_source": ["id", "references"],
-        "size": 10000,
-        "query": {
-            "match_all": {}
-        }
-    }, scroll='2m')
-
-    # get es scroll id
-    scroll_id = res['_scroll_id']
-    while res['hits']['hits'] and len(res['hits']['hits']) > 0:
-        for hit in res['hits']['hits']:
-            id = hit['_source']['id']
-            references = hit['_source']['references']
-
-            if len(references) >= min_references:
-                id_set.add(id)
-
-        # use es scroll api
-        res = es.scroll(scroll_id=scroll_id, scroll='2m',
-                        request_timeout=10)
-        print(len(id_set))
-
-    es.clear_scroll(body={'scroll_id': scroll_id})
-
-    id_sorted_list = sorted(id_set)
-
-    index_dict = dict()
-    cur_index = 0
-    for id in id_sorted_list:
-        index_dict[id] = cur_index
-        cur_index += 1
-
-    with open(filename, 'w') as fp:
-        fp.write(json.dumps(index_dict))
-
-    print(len(index_dict))
-    return index_dict
-
-
 class Memoize(object):
     def __init__(self, func):
         self.func = func
@@ -249,9 +145,9 @@ def calculate_prob_vector(references_a_set, reference_list, memoized_prob):
     """
     :param references_a_set: set
         set of references for the paper belonging to this prob_vector
-    :return reference_list: list of strings
+    :param reference_list: list of strings
         Is a list (organized by index) of lists of references (which are also paper id strings).
-    :return memoized_prob: Object
+    :param memoized_prob: Object
         Object returned after passing functions.prob into Memoize()
     :return: prob_vector: list
         A list of prob values for each paper in the dataset with a # of references > min_references
@@ -264,31 +160,19 @@ def calculate_prob_vector(references_a_set, reference_list, memoized_prob):
         contingency_table = get_contingency_table(references_a_set, references_b)
         chi_square = functions.chi_square(contingency_table)
 
-        rounded_chi_square = round(chi_square, 4)
+        rounded_chi_square = round(chi_square, 6)
         if rounded_chi_square == 0:
             continue
 
         prob, absolute_error = memoized_prob(rounded_chi_square)
         prob_vector[index] = prob
 
+        # if prob >= 0.1:
+        #     print(prob)
+
         index += 1
 
     return prob_vector
-
-
-def output_inverted_index_dict(index_dict, filename):
-    """
-    :param index_dict: dict
-        dictionary of ids to indexes
-    :param filename: string
-        file path to output inverted index dict
-    :return: inverted_dict: dict
-        dictionary with the keys and values of the index dict swapped
-    """
-    inverted_dict = dict([[v, k] for k, v in index_dict.items()])
-    with open(filename, 'w') as fp:
-        fp.write(json.dumps(inverted_dict))
-    return inverted_dict
 
 
 def extract_neighbours(pid, percent):
@@ -319,19 +203,6 @@ def extract_neighbours(pid, percent):
     return neighbour_set, reference_list
 
 
-def output_json(filename_prefix, min_references):
-    """
-    :param filename_prefix: string
-        paper id
-    :param min_references: int
-        filters out all papers with a number of references less than min_references
-    """
-    index_dict = output_index_dict(filename_prefix + "index_dict_" + str(min_references) + ".json", min_references)
-    output_reference_list(filename_prefix + "references_list_" + str(min_references) + ".json",
-                          filename_prefix + "index_dict_" + str(min_references) + ".json", min_references)
-    output_inverted_index_dict(index_dict, filename_prefix + "inverted_index_dict_" + str(min_references) + ".json")
-
-
 def populate_es_association_vectors(references_filename, inverted_index_filename):
     """
     Updates elasticsearch with the association vectors
@@ -353,24 +224,17 @@ def populate_es_association_vectors(references_filename, inverted_index_filename
     for references_a in reference_list:
         prob_vector = calculate_prob_vector(set(references_a), reference_list, memoized_prob)
         id = inverted_index_dict[str(index)]
-        print(id)
 
         index += 1
         es_request.upload_cbcf_vector(id, prob_vector)
+
+        if index % 100 == 0:
+            print(index)
 
 
 if __name__ == '__main__':
     # neighbour_set, reference_list = extract_neighbours(2029880715, 0.5)
     # print(neighbour_set)
     # print(reference_list)
-    #
-    #
-    # index_dict = output_dicts("../support/", 30)
-    #
-    #
-    populate_es_association_vectors("../support/references_dict_30.json", "../support/inverted_index_dict_30.json")
 
-    # prob_vector = extract_prob_vector(find_by_id_cbcf_aminer(100193447))
-    # for prob in prob_vector:
-    #     if prob > 0.1:
-    #         print(prob)
+    populate_es_association_vectors("../support/references_list_40_5.json", "../support/inverted_index_dict_40_5.json")
