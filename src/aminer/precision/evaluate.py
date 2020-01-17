@@ -1,15 +1,18 @@
-from gensim.models import FastText
-import pickle
-import scipy
-import numpy as np
-import pkg_resources
-import os
+import heapq
 import json
-from scipy import spatial
+import math
+import os
+import pickle
 from os import listdir
 from os.path import isfile
+
+import numpy as np
+import pkg_resources
+import scipy
+from gensim.models import FastText
+from scipy import spatial
+
 from aminer.recall.query_es import get_abstract_by_pids
-import heapq
 
 root_directory = pkg_resources.resource_filename("aminer", "support")
 model_directory = os.path.join(root_directory, "models")
@@ -34,8 +37,6 @@ def compute_abstract_embedding(abstract):
         return [0] * 50
 
     return (sum_embedding / word_count).tolist()
-
-import math
 
 
 def get_all_embeddings(current_embedding, files):
