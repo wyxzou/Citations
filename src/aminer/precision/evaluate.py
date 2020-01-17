@@ -41,6 +41,7 @@ def compute_abstract_embedding(abstract):
 
 def get_all_embeddings(current_embedding, files):
     for file in files:
+        print("Checking file: ", file)
         with open(file, 'r') as f:
             embeddings = json.load(f)
             f.close()
@@ -57,6 +58,7 @@ def recommend(ids):
     recommendations = {}
 
     for target_id, abstract in ids_to_abstract.items():
+        print("Finding recommendations for: ", target_id)
         embeddings_directory = os.path.join(root_directory, "embeddings")
 
         current_embedding = compute_abstract_embedding(abstract)
