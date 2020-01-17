@@ -10,4 +10,5 @@ __pycache__/
 
 src/scisumm/dataset
 src/aminer/data
+src/aminer/support/models
 

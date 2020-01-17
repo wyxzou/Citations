@@ -12,7 +12,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # TODO: combine this with get_word_embeddings.py.
 
-def iter_abstract_sentences_processed(abstract_folder):
+def iter_abstract_sentences_processed(abstract_folder, mode='sentence'):
 	def iter_abstracts(abstract_folder):
 		json_file_names = sorted(os.listdir(abstract_folder), key=lambda x: int(x.split('_')[-1].split('.')[0]))
 		for file_name in json_file_names:
@@ -33,8 +33,11 @@ def iter_abstract_sentences_processed(abstract_folder):
 		if i % 10000 == 0:
 			print('Batch:', i // 10000)
 
-		for sentence in sent_tokenize(abstract):
-			yield etp(sentence)
+		if mode == 'sentence':
+			for sentence in sent_tokenize(abstract):
+				yield etp(sentence)
+		elif mode == 'abstract':
+			yield etp(abstract)
 
 def get_tfidf_vectorizer(abstract_folder, vector_size=50, window_size=5, min_word_count=1, worker_threads=1, epochs=20):	
 	vec = TfidfVectorizer()

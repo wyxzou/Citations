@@ -8,6 +8,7 @@ from aminer.precision.utility import EnglishTextProcessor
 from gensim.models import Word2Vec
 from nltk.tokenize import sent_tokenize
 
+
 def iter_abstracts_es(es):
 	res = es.search(index='aminer', body={
 		'_source': ['abstract'],
@@ -26,6 +27,7 @@ def iter_abstracts_es(es):
 		res = es.scroll(scroll_id=scroll_id, scroll='24h', request_timeout=10)
 
 	es.clear_scroll(body={'scroll_id': scroll_id})
+
 
 def iter_abstract_sentences_processed(abstract_folder):
 	def iter_abstracts(abstract_folder):
@@ -51,11 +53,13 @@ def iter_abstract_sentences_processed(abstract_folder):
 		for sentence in sent_tokenize(abstract):
 			yield etp(sentence).split()
 
+
 def get_embeddings(abstract_folder, vector_size=50, window_size=5, min_word_count=1, worker_threads=1, epochs=20):	
 	embeddings = Word2Vec(size=vector_size, window=window_size, min_count=min_word_count, workers=worker_threads)
 	embeddings.build_vocab(sentences=iter_abstract_sentences_processed(abstract_folder))
 	embeddings.train(sentences=iter_abstract_sentences_processed(abstract_folder), epochs=epochs, total_examples=embeddings.corpus_count)
 	return embeddings
+
 
 def main():
 	embeddings = get_embeddings('abstract_dictionaries')
