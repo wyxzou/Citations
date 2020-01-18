@@ -52,7 +52,7 @@ def get_all_embeddings(current_embedding, files):
                 yield (id, cosine_similarity)
 
 
-def recommend(ids):
+def recommend(ids, k=100):
     ids_to_abstract = get_abstract_by_pids(ids)
 
     recommendations = {}
@@ -66,16 +66,16 @@ def recommend(ids):
         files = [os.path.join(embeddings_directory, f) for f in listdir(embeddings_directory) if isfile(os.path.join(embeddings_directory, f))]
 
         all_embeddings = get_all_embeddings(current_embedding, files)
-        recommendations[target_id] = heapq.nlargest(100, all_embeddings, key=lambda e: e[1])
+        recommendations[target_id] = heapq.nlargest(k, all_embeddings, key=lambda e: e[1])
 
     return recommendations
 
 
 if __name__ == '__main__':
-    file = os.path.join(root_directory, 'ids.txt')
+    file = os.path.join(root_directory, 'sample_id.txt')
     ids = [line.rstrip('\n') for line in open(file)]
 
-    recommendations = recommend(ids)
+    recommendations = recommend(ids, 10000)
 
     outfile = os.path.join(root_directory, 'recommendations.json')
 
