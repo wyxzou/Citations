@@ -32,7 +32,7 @@ def compute_abstract_embedding(abstract):
         word = word_to_idx[word_index]
         if word in fasttext.wv.vocab:
             word_count += 1
-            sum_embedding += fasttext.wv[word]
+            sum_embedding += word_tfidf * fasttext.wv[word]
 
     if word_count == 0:
         return [0] * 50
