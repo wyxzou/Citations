@@ -69,6 +69,18 @@ def get_references_by_pid(paper_id):
     return reference_list
 
 
+def get_title_by_pid(paper_id):
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+
+    if len(res['hits']['hits']) == 0:
+        return list()
+
+    title = res['hits']['hits'][0]['_source']['title']
+    return title
+
+
 def get_papers_with_author_id(author_id):
     """
     Return all results with a specific author id. Returns an elasticsearch object.
