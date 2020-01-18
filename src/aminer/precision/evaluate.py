@@ -12,7 +12,8 @@ import scipy
 from gensim.models import FastText
 from scipy import spatial
 
-from aminer.recall.query_es import get_abstract_by_pids
+from aminer.recall.query_es import get_abstract_by_pids, get_references_by_pid
+from aminer.precision.metrics import recall, precision
 
 root_directory = pkg_resources.resource_filename("aminer", "support")
 model_directory = os.path.join(root_directory, "models")
@@ -77,10 +78,17 @@ if __name__ == '__main__':
 
     recommendations = recommend(ids, 10000)
 
-    outfile = os.path.join(root_directory, 'recommendations.json')
+    outfile = os.path.join(root_directory, 'sample_recommendation.json')
 
     with open(outfile, 'w') as f:
         json.dump(recommendations, f)
+
+    for pid, recs in recommendations.items():
+        pred_reference_list = [e[0] for e in recs]
+        true_reference_list = get_references_by_pid(pid)
+
+        print(precision(pred_reference_list, true_reference_list))
+        print(recall(pred_reference_list, true_reference_list))
 
 
 
