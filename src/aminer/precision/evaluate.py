@@ -73,12 +73,12 @@ def recommend(ids, k=100):
 
 
 if __name__ == '__main__':
-    file = os.path.join(root_directory, 'sample_id.txt')
+    file = os.path.join(root_directory, 'ids.txt')
     ids = [line.rstrip('\n') for line in open(file)]
 
     recommendations = recommend(ids, 10000)
 
-    outfile = os.path.join(root_directory, 'sample_recommendation.json')
+    outfile = os.path.join(root_directory, 'recommendation.json')
 
     with open(outfile, 'w') as f:
         json.dump(recommendations, f)
