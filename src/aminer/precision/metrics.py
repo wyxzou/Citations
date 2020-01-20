@@ -66,19 +66,24 @@ def inspect_abstracts(pid):
 
 
 if __name__ == '__main__':
-    inspect_abstracts(1139321046)
-    # root_directory = pkg_resources.resource_filename("aminer", "support")
-    #
-    # outfile = os.path.join(root_directory, 'recommendations.json')
-    #
-    # with open(outfile, 'r') as f:
-    #     recommendations = json.load(f)
-    #     f.close()
-    #
-    # for pid, recs in recommendations.items():
-    #     pred_reference_list = [e[0] for e in recs]
-    #     true_reference_list = get_references_by_pid(pid)
-    #
-    #     print(precision(pred_reference_list, true_reference_list))
-    #     print(recall(pred_reference_list, true_reference_list))
+    # inspect_abstracts(1139321046)
+    root_directory = pkg_resources.resource_filename("aminer", "support")
+
+    outfile = os.path.join(root_directory, 'recommendations.json')
+
+    with open(outfile, 'r') as f:
+        recommendations = json.load(f)
+        f.close()
+
+    recalls = []
+    for pid, recs in recommendations.items():
+        pred_reference_list = [e[0] for e in recs]
+        true_reference_list = get_references_by_pid(pid)
+
+        print(precision(pred_reference_list, true_reference_list))
+        r = recall(pred_reference_list, true_reference_list)
+        print(r)
+        recalls.append(r)
+
+    print("Avg recall: ", sum(recalls)/len(recalls))
 
