@@ -66,7 +66,6 @@ def inspect_abstracts(pid):
 
 
 if __name__ == '__main__':
-    # inspect_abstracts(1139321046)
     root_directory = pkg_resources.resource_filename("aminer", "support")
 
     outfile = os.path.join(root_directory, 'recommendations.json')

@@ -23,7 +23,7 @@ fasttext = FastText.load(os.path.join(model_directory, 'fasttext', 'fasttext.mod
 word_to_idx = list(vec.get_feature_names())
 
 
-def compute_abstract_embedding(abstract):
+def compute_abstract_embedding(abstract, is_query=False):
     tfidf_vec = vec.transform([abstract])
     tfidf_vec = scipy.sparse.coo_matrix(tfidf_vec)
     word_count = 0
@@ -32,7 +32,10 @@ def compute_abstract_embedding(abstract):
         word = word_to_idx[word_index]
         if word in fasttext.wv.vocab:
             word_count += 1
-            sum_embedding += word_tfidf * fasttext.wv[word]
+            if not is_query:
+                sum_embedding += word_tfidf * fasttext.wv[word]
+            else:
+                sum_embedding += fasttext.wv[word]
 
     if word_count == 0:
         return [0] * 50
@@ -62,7 +65,7 @@ def recommend(ids, k=100):
         print("Finding recommendations for: ", target_id)
         embeddings_directory = os.path.join(root_directory, "embeddings")
 
-        current_embedding = compute_abstract_embedding(abstract)
+        current_embedding = compute_abstract_embedding(abstract, is_query=True)
 
         files = [os.path.join(embeddings_directory, f) for f in listdir(embeddings_directory) if isfile(os.path.join(embeddings_directory, f))]
 
