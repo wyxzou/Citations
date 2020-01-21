@@ -35,6 +35,18 @@ def get_es_object_by_pid(paper_id):
     return res
 
 
+def get_abstract_by_pid(paper_id):
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+
+    if len(res['hits']['hits']) == 0:
+        return ''
+
+    abstract = res['hits']['hits'][0]['_source']['abstract']
+    return abstract
+
+
 def get_abstract_by_pids(paper_ids):
     """
     Gets the abstract of papers with the provided list of ids
