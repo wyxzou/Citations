@@ -60,7 +60,7 @@ def recommend(ids, k=100):
 
     for target_id, abstract in ids_to_abstract.items():
         print("Finding recommendations for: ", target_id)
-        embeddings_directory = os.path.join(root_directory, "embeddings")
+        embeddings_directory = os.path.join(root_directory, "output_embeddings2")
 
         current_embedding = compute_abstract_embedding(abstract)
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     recommendations = recommend(ids, 10000)
 
-    outfile = os.path.join(root_directory, 'recommendation.json')
+    outfile = os.path.join(root_directory, 'recommendations.json')
 
     with open(outfile, 'w') as f:
         json.dump(recommendations, f)
