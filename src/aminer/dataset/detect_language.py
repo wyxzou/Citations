@@ -104,14 +104,14 @@ def update_language_all_from_directory(start=0):
         filename = 'abstract_dict_' + str(i) + '.json'
         filepath = join(mypath, filename)
 
-        with open(filepath) as json_file:
-            abstract_dict = json.loads(json_file)
+        with open(filepath, 'r') as json_file:
+            abstract_dict = json.load(json_file)
             json_file.close()
 
-        for pid, abstract in abstract_dict:
+        for pid, abstract in abstract_dict.items():
             lang = get_lang_by_pid(pid)
-
             if lang == 'Not inputted':
+                print('Processing', pid)
                 etp = EnglishTextProcessor()
                 processed_abstract = etp(abstract)
 
@@ -139,6 +139,7 @@ def update_language_all_from_directory(start=0):
                         "language": lang,
                     }
                 }
+                print('Language: ', lang)
                 response = es.update(index="aminer", id=pid, body=dic)
 
         print('Completed: ', filename)
