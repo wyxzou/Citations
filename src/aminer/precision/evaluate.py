@@ -79,7 +79,7 @@ if __name__ == '__main__':
     file = os.path.join(root_directory, 'ids.txt')
     ids = [line.rstrip('\n') for line in open(file)]
 
-    recommendations = recommend(ids, 10000)
+    recommendations = recommend(ids, 100000)
 
     outfile = os.path.join(root_directory, 'recommendations.json')
 
