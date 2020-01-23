@@ -43,10 +43,9 @@ def connect_elasticsearch():
     _es = Elasticsearch([
         'https://search-ccf-x5pb62bjtwybf3wbaeyg2gby4y.us-east-2.es.amazonaws.com'
     ], use_ssl=True, ca_certs=certifi.where())
-    if _es.ping():
-        print('Yay Connect')
-    else:
+    if not _es.ping():
         print('Awww it could not connect!')
+    
     return _es
 
 

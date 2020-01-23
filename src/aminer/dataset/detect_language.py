@@ -12,8 +12,8 @@ def update_language(pid):
 
     etp = EnglishTextProcessor()
 
-    if len(abstract) > 0:
-        processed_abstract = etp(abstract)
+    processed_abstract = etp(abstract)
+    if len(processed_abstract) > 0:
         lang = detect(processed_abstract)
     elif len(title) > 0:
         lang = detect(title)
@@ -43,27 +43,36 @@ if __name__ == '__main__':
         "query": {
             "match_all": {}
         }
-    }, scroll='2m')
+    }, scroll='20m')
 
     # get es scroll id
     count = 0
     scroll_id = res['_scroll_id']
     while res['hits']['hits'] and len(res['hits']['hits']) > 0:
         for hit in res['hits']['hits']:
-            print('Update pid: ', pid)
             pid = hit['_source']['id']
             abstract = hit['_source']['abstract']
             title = hit['_source']['title']
 
             etp = EnglishTextProcessor()
+            processed_abstract = etp(abstract)
 
-            if len(abstract) > 0:
-                processed_abstract = etp(abstract)
-                lang = detect(processed_abstract)
+            if len(processed_abstract) > 0:
+                try:
+                    lang = detect(processed_abstract)
+                except:
+                    lang = 'Language cannot be detected'
+                    print('The language of this abstract cannot be detected: ', processed_abstract)
+                    print('The paper id is: ', pid)
             elif len(title) > 0:
-                lang = detect(title)
+                try:
+                    lang = detect(title)
+                except:
+                    lang = 'Language cannot be detected'
+                    print('The language of this title cannot be detected: ', title)
+                    print('The paper id is: ', pid)
             else:
-                lang = 'Cannot be detected'
+                lang = 'Empty abstract and title'
 
             dic = {
                 'doc': {
@@ -71,7 +80,7 @@ if __name__ == '__main__':
                 }
             }
 
-            es = es_request.connect_elasticsearch()
+            # es2 = es_request.connect_elasticsearch()
             response = es.update(index="aminer", id=pid, body=dic)
 
         count += 1
@@ -79,5 +88,5 @@ if __name__ == '__main__':
         # get es scroll idsss
         scroll_id = res['_scroll_id']
         # use es scroll api
-        res = es.scroll(scroll_id=scroll_id, scroll='2m', request_timeout=10)
+        res = es.scroll(scroll_id=scroll_id, scroll='20m', request_timeout=10)
 
