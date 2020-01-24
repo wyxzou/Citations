@@ -61,7 +61,7 @@ def recommend(ids, k=100):
 
     embeddings_directory = os.path.join(root_directory, "output_embeddings2")
     files = [os.path.join(embeddings_directory, f) for f in listdir(embeddings_directory) if isfile(os.path.join(embeddings_directory, f))]
-    for file in tqdm(files[:2]):
+    for file in tqdm(files):
         with open(file, 'r') as f:
             embeddings = json.load(f)
             f.close()
