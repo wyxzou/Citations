@@ -55,7 +55,7 @@ def get_similarities(dataset_embedding, test_embeddings):
 
 def extract_fos_set(pid, filtered_fields=['mathematics', 'computer science', 'artificial intelligence']):
     foss = get_fos_by_pid(pid)
-    fos_set = {}
+    fos_set = set()
 
     for fos in foss:
         fos_element = fos['name'].lower()
