@@ -12,7 +12,8 @@ import scipy
 from gensim.models import FastText
 from scipy import spatial
 
-from aminer.recall.query_es import get_abstract_by_pids, get_references_by_pid
+from aminer.precision.evaluate_better import extract_fos_set, extract_lang_and_fos_set
+from aminer.recall.query_es import get_abstract_by_pids, get_references_by_pid, get_lang_by_pid
 from aminer.precision.metrics import recall, precision
 
 root_directory = pkg_resources.resource_filename("aminer", "support")
@@ -43,17 +44,20 @@ def compute_abstract_embedding(abstract, is_query=False):
     return (sum_embedding / word_count).tolist()
 
 
-def get_all_embeddings(current_embedding, files):
+def get_all_embeddings(current_embedding, files, fos):
     for file in files:
         print("Checking file: ", file)
         with open(file, 'r') as f:
             embeddings = json.load(f)
             f.close()
 
-        for id, emb in embeddings.items():
-            cosine_similarity = 1 - spatial.distance.cosine(current_embedding, emb)
-            if not math.isnan(cosine_similarity):
-                yield (id, cosine_similarity)
+        for pid, emb in embeddings.items():
+            target_lang, target_fos = extract_lang_and_fos_set(pid)
+            if not target_fos.isdisjoint(fos):
+                if target_lang == 'en' or target_lang == 'Not inputted':
+                    cosine_similarity = 1 - spatial.distance.cosine(current_embedding, emb)
+                    if not math.isnan(cosine_similarity):
+                        yield (pid, cosine_similarity)
 
 
 def recommend(ids, k=100):
@@ -63,20 +67,21 @@ def recommend(ids, k=100):
 
     for target_id, abstract in ids_to_abstract.items():
         print("Finding recommendations for: ", target_id)
+        fos = extract_fos_set(target_id)
         embeddings_directory = os.path.join(root_directory, "output_embeddings2")
 
         current_embedding = compute_abstract_embedding(abstract, is_query=True)
 
         files = [os.path.join(embeddings_directory, f) for f in listdir(embeddings_directory) if isfile(os.path.join(embeddings_directory, f))]
 
-        all_embeddings = get_all_embeddings(current_embedding, files)
+        all_embeddings = get_all_embeddings(current_embedding, files, fos)
         recommendations[target_id] = heapq.nlargest(k, all_embeddings, key=lambda e: e[1])
 
     return recommendations
 
 
 if __name__ == '__main__':
-    file = os.path.join(root_directory, 'ids.txt')
+    file = os.path.join(root_directory, 'sample_id.txt')
     ids = [line.rstrip('\n') for line in open(file)]
 
     recommendations = recommend(ids, 100000)
