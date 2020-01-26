@@ -13,7 +13,7 @@ from gensim.models import FastText
 from scipy import spatial
 from tqdm import tqdm
 
-from aminer.recall.query_es import get_abstract_by_pids, get_references_by_pid
+from aminer.recall.query_es import get_abstract_by_pids, get_references_by_pid, get_fos_by_pid, get_lang_by_pid
 from aminer.precision.metrics import recall, precision
 
 root_directory = pkg_resources.resource_filename("aminer", "support")
@@ -53,6 +53,18 @@ def get_similarities(dataset_embedding, test_embeddings):
     return similarities
 
 
+def extract_fos_set(pid, filtered_fields=['mathematics', 'computer science', 'artificial intelligence']):
+    foss = get_fos_by_pid(pid)
+    fos_set = {}
+
+    for fos in foss:
+        fos_element = fos['name'].lower()
+        if fos_element not in filtered_fields:
+            fos_set.add(fos_element)
+
+    return fos_set
+
+
 def recommend(ids, k=100):
     ids_to_abstract = get_abstract_by_pids(ids)
     ids_to_embeddings = {id:compute_abstract_embedding(ids_to_abstract[id]) for id in ids_to_abstract}
@@ -67,14 +79,19 @@ def recommend(ids, k=100):
             f.close()
 
         for id, emb in embeddings.items():
+            fos = extract_fos_set(id)
             similarities = get_similarities(emb, test_embeddings)
             for example_id, similarity in zip(list(ids_to_embeddings.keys()), similarities):
-                if len(recommendations[example_id]) < k:
-                    # grow the heap
-                    heapq.heappush(recommendations[example_id], tuple([similarity, id]))
-                else:
-                    # maintain the size
-                    heapq.heappushpop(recommendations[example_id], tuple([similarity, id]))
+                target_fos = extract_fos_set(example_id)
+                if not fos.isdisjoint(target_fos):
+                    lang = get_lang_by_pid(example_id)
+                    if lang is 'en' or lang is 'Not inputted':
+                        if len(recommendations[example_id]) < k:
+                            # grow the heap
+                            heapq.heappush(recommendations[example_id], tuple([similarity, id]))
+                        else:
+                            # maintain the size
+                            heapq.heappushpop(recommendations[example_id], tuple([similarity, id]))
 
     # discard similarities and only keep id from the tuples
     recommendations = {id: [a[1] for a in recommendations[id]] for id in recommendations}
@@ -98,6 +115,8 @@ if __name__ == '__main__':
 
         print(precision(pred_reference_list, true_reference_list))
         print(recall(pred_reference_list, true_reference_list))
+
+
 
 
 
