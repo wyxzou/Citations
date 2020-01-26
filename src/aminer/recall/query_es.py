@@ -16,7 +16,7 @@ def get_authors_by_pid(paper_id):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
 
-    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+    res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
 
     author_list = res['hits']['hits'][0]['_source']['authors']
 
@@ -31,14 +31,14 @@ def get_es_object_by_pid(paper_id):
     # We should probably not be connecting each time.
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+    res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
     return res
 
 
 def get_abstract_by_pid(paper_id):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+    res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
 
     if len(res['hits']['hits']) == 0:
         return ''
@@ -60,7 +60,7 @@ def get_abstract_by_pids(paper_ids):
 
     dic = {}
     for paper_id in paper_ids:
-        res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+        res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
         if not res["hits"]["hits"]:
             print("Error: no such id for ", paper_id)
         else:
@@ -72,7 +72,7 @@ def get_abstract_by_pids(paper_ids):
 def get_references_by_pid(paper_id):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+    res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
 
     if len(res['hits']['hits']) == 0:
         return list()
@@ -84,7 +84,7 @@ def get_references_by_pid(paper_id):
 def get_lang_by_pid(paper_id):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+    res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
 
     if len(res['hits']['hits']) == 0:
         return list()
@@ -98,10 +98,22 @@ def get_lang_by_pid(paper_id):
     return lang
 
 
+def get_fos_by_pid(paper_id):
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+    res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
+
+    if len(res['hits']['hits']) == 0:
+        return list()
+
+    fos = res['hits']['hits'][0]['_source']['fos']
+    return fos
+
+
 def get_title_by_pid(paper_id):
     logging.basicConfig(level=logging.ERROR)
     es = es_request.connect_elasticsearch()
-    res = es.search(index="aminer", body={"query": {"match": {"id": paper_id}}})
+    res = es.search(index="aminer", body={"query": {"match": {"_id": paper_id}}})
 
     if len(res['hits']['hits']) == 0:
         return list()
