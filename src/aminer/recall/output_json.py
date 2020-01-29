@@ -308,7 +308,7 @@ def output_abstract_dict():
     es = es_request.connect_elasticsearch()
 
     res = es.search(index="aminer", body={
-        "_source": ["id", "abstract"],
+        "_source": ["id", "abstract", "language", "fos"],
         "size": 10000,
         "query": {
             "match_all": {}
@@ -328,7 +328,9 @@ def output_abstract_dict():
             id = hit['_source']['id']
 
             if id not in id_set:
-                abstract_dict[id] = hit['_source']['abstract']
+                abstract = hit['_source']['abstract']
+
+                abstract_dict[id] = abstract
                 id_set.add(id)
 
         print(len(id_set))
