@@ -92,7 +92,6 @@ def recommend(ids, k=100):
             f.close()
 
         for id, emb in embeddings.items():
-            print('id', id)
             fos = extract_fos_set(id)
             similarities = get_similarities(emb, test_embeddings)
             for example_id, similarity in zip(list(ids_to_embeddings.keys()), similarities):

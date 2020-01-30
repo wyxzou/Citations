@@ -328,9 +328,9 @@ def output_abstract_dict():
             id = hit['_source']['id']
 
             if id not in id_set:
-                abstract = hit['_source']['abstract']
+                abstract =
 
-                abstract_dict[id] = abstract
+                abstract_dict[id] = hit['_source']['abstract']
                 id_set.add(id)
 
         print(len(id_set))
@@ -345,8 +345,51 @@ def output_abstract_dict():
     es.clear_scroll(body={'scroll_id': scroll_id})
 
 
+def output_language_dict():
+    """
+        For each batch the function creates a JSON file of a dict mapping each id to that id's language
+    """
+
+    logging.basicConfig(level=logging.ERROR)
+    es = es_request.connect_elasticsearch()
+
+    res = es.search(index="aminer", body={
+        "_source": ["id", "language"],
+        "size": 10000,
+        "query": {
+            "match_all": {}
+        }
+    }, scroll='2m')
+
+    id_set = set()
+
+    i = 0
+    # get es scroll id
+    scroll_id = res['_scroll_id']
+    while res['hits']['hits'] and len(res['hits']['hits']) > 0:
+
+        language_dict = dict()
+
+        for hit in res['hits']['hits']:
+            id = hit['_source']['id']
+
+            if id not in id_set:
+                language_dict[id] = hit['_source']['language']
+                id_set.add(id)
+
+        print(len(id_set))
+
+        with open("../support/language/language_dict_" + str(i) + ".json", 'w') as fp:
+            json.dump(language_dict, fp)
+
+        # use es scroll api
+        res = es.scroll(scroll_id=scroll_id, scroll='2m',
+                        request_timeout=10)
+        i += 1
+    es.clear_scroll(body={'scroll_id': scroll_id})
+
 if __name__ == '__main__':
-# output_cited_by_dict()
+    output_language_dict()
 # output_index_dict(40, 5)
 # output_reference_list(40, 5)
 # output_inverted_index_dict(40, 5)
