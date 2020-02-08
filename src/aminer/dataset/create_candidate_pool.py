@@ -42,7 +42,7 @@ def query_papers_by_year(year, num_papers, num_citations):
                     if check_if_all_papers_have_valid_abstracts(reference_list):
                         id_list.append(hit['_source']['id'])
 
-            if len(id_list) > num_papers:
+            if len(id_list) >= num_papers:
                 break
 
             res = es.scroll(scroll_id=scroll_id, scroll='2m',
@@ -127,13 +127,22 @@ def get_candidate_dict(id_list, excluded_id_list, candidate_size):
     return candidate_dict, abstract_dict
 
 
+import pkg_resources
+import os
+def print_to_file(mylist, filename):
+    support_directory = pkg_resources.resource_filename("aminer", "support") 
+    filepath = os.path.join(support_directory, filename)
+    with open(filepath, 'w') as f:
+        for item in mylist:
+            f.write("%s\n" % item)
+    
+
 if __name__ == "__main__":
-    excluded_ids = ["2123991323", "23142202", "1483005138"]
     # id_list = ["5", "100008599", "100008278", "100007563"]
 
-    id_list = query_papers_by_year(2017, 100, 20)
+    id_list = query_papers_by_year(2019, 100, 20)
 
-    print(id_list)
+    print_to_file(id_list, '2019_recommendations.txt')
 
     # for id in id_list:
     #     print(query_on_paper_id[id])
