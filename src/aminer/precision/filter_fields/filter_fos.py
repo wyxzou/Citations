@@ -28,7 +28,7 @@ def count_fos():
 
 
 fos_counts = load_json(os.path.join(support_directory, 'output_fos_counts/fos_counts_410.json'))
-file = os.path.join('../support', '2019_ids.txt')
+file = os.path.join(support_directory, '2019_ids.txt')
 ids = [line.rstrip('\n') for line in open(file)]
 threshold = 500000
 

@@ -7,7 +7,7 @@ from aminer.precision.utility import load_json, dump_json
 from aminer.recall.query_es import get_references_by_pid
 
 support_directory = pkg_resources.resource_filename("aminer", "support")
-file = os.path.join('../support', '2019_ids.txt')
+file = os.path.join(support_directory, '2019_ids.txt')
 ids = set([line.rstrip('\n') for line in open(file)])
 
 

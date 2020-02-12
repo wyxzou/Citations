@@ -2,6 +2,7 @@ import nltk
 import os
 import re
 import sys
+import json
 sys.path.append('../..')
 
 from nltk.corpus import stopwords, wordnet

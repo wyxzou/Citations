@@ -328,8 +328,6 @@ def output_abstract_dict():
             id = hit['_source']['id']
 
             if id not in id_set:
-                abstract =
-
                 abstract_dict[id] = hit['_source']['abstract']
                 id_set.add(id)
 
@@ -354,7 +352,7 @@ def output_dict(field):
     es = es_request.connect_elasticsearch()
 
     res = es.search(index="aminer", body={
-        "_source": ["id", "language"],
+        "_source": ["id", field],
         "size": 10000,
         "query": {
             "match_all": {}
@@ -380,7 +378,7 @@ def output_dict(field):
         print(len(id_set))
 
         directory = "../support/" + field + "/" + field + "_dict_"
-        with open("../support/language/language_dict_" + str(i) + ".json", 'w') as fp:
+        with open(directory + str(i) + ".json", 'w') as fp:
             json.dump(my_dict, fp)
 
         # use es scroll api
