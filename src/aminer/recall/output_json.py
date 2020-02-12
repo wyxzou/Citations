@@ -345,7 +345,7 @@ def output_abstract_dict():
     es.clear_scroll(body={'scroll_id': scroll_id})
 
 
-def output_language_dict():
+def output_dict(field):
     """
         For each batch the function creates a JSON file of a dict mapping each id to that id's language
     """
@@ -368,19 +368,20 @@ def output_language_dict():
     scroll_id = res['_scroll_id']
     while res['hits']['hits'] and len(res['hits']['hits']) > 0:
 
-        language_dict = dict()
+        my_dict = dict()
 
         for hit in res['hits']['hits']:
             id = hit['_source']['id']
 
             if id not in id_set:
-                language_dict[id] = hit['_source']['language']
+                my_dict[id] = hit['_source'][field]
                 id_set.add(id)
 
         print(len(id_set))
 
+        directory = "../support/" + field + "/" + field + "_dict_"
         with open("../support/language/language_dict_" + str(i) + ".json", 'w') as fp:
-            json.dump(language_dict, fp)
+            json.dump(my_dict, fp)
 
         # use es scroll api
         res = es.scroll(scroll_id=scroll_id, scroll='2m',
@@ -388,8 +389,10 @@ def output_language_dict():
         i += 1
     es.clear_scroll(body={'scroll_id': scroll_id})
 
+
+
 if __name__ == '__main__':
-    output_language_dict()
-# output_index_dict(40, 5)
-# output_reference_list(40, 5)
-# output_inverted_index_dict(40, 5)
+    output_dict('year')
+    # output_index_dict(40, 5)
+    # output_reference_list(40, 5)
+    # output_inverted_index_dict(40, 5)

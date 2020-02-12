@@ -4,22 +4,10 @@ import json
 from tqdm import tqdm
 import pkg_resources
 
+from aminer.precision.utility import load_json, dump_json
 support_directory = pkg_resources.resource_filename("aminer", "support")
 file = os.path.join('../support', '2019_ids.txt')
 ids = set([line.rstrip('\n') for line in open(file)])
-
-
-def load_json(file_name):
-    o = None
-    with open(file_name) as f:
-        o = json.load(f)
-
-    return o
-
-
-def dump_json(file_name, d):
-    with open(file_name, 'w') as f:
-        json.dump(d, f)
 
 
 paper_authors = {}

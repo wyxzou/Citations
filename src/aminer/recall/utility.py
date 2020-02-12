@@ -47,8 +47,7 @@ def find_citation_of_papers(input_file, output_file):
     :param input_file: string
         name of file to read
     :param output_file: string
-        name of file to
-    An example of is loaded into output_data.json
+        name of file to write to
     """
 
     content = []

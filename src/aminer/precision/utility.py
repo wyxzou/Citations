@@ -57,3 +57,18 @@ class EnglishTextProcessor():
                 sentences_without_stop_words_lemmatized += [sentence_without_stop_words_lemmatized]
 
         return '\n'.join(sentences_without_stop_words_lemmatized)
+
+
+
+
+def load_json(file_name):
+    o = None
+    with open(file_name) as f:
+        o = json.load(f)
+
+    return o
+
+
+def dump_json(file_name, d):
+    with open(file_name, 'w') as f:
+        json.dump(d, f)
