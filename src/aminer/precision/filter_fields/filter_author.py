@@ -1,10 +1,11 @@
 import os
-import json
 
 from tqdm import tqdm
 import pkg_resources
 
 from aminer.precision.utility import load_json, dump_json
+from aminer.recall.query_es import get_references_by_pid
+
 support_directory = pkg_resources.resource_filename("aminer", "support")
 file = os.path.join('../support', '2019_ids.txt')
 ids = set([line.rstrip('\n') for line in open(file)])
@@ -83,18 +84,12 @@ for id in tqdm(potentially_cited_authors_for_id):
             potential_citations[id] = potential_citations[id].union(author_to_paper[author])
 
 
-sum(len(potential_citations[id]) for id in ids) / len(potential_citations)
-sum(len(potential_citations[id]) for id in ids) / len(potential_citations)
-
-
 potentially_cited_authors_for_id = {id: set() for id in ids}
 for id in ids:
     for author in paper_authors[id]:
         if author in first_order_author_dicts:
             potentially_cited_authors_for_id[id] = potentially_cited_authors_for_id[id].union(first_order_author_dicts[author])
 
-
-from aminer.recall.query_es import get_abstract_by_pids, get_references_by_pid
 
 test_recs = {}
 for id in ids:
