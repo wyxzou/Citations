@@ -20,11 +20,11 @@ root_directory = pkg_resources.resource_filename("aminer", "support")
 model_directory = os.path.join(root_directory, "models")
 
 vec = pickle.load(open(os.path.join(model_directory, 'vec.model'), 'rb'))
-fasttext = Word2Vec.load('word2vec_100/word2vec_100.model')
+fasttext = Word2Vec.load('word2vec_100/word2vec_150.model')
 word_to_idx = list(vec.get_feature_names())
 relevant_ids = None
 dim = 100
-filter_method = 'fos_author_filtered.json'
+filter_method = os.path.join(root_directory, 'fos_author_filtered.json')
 with open(filter_method) as relevant_ids_file:
     relevant_ids = json.load(relevant_ids_file)
 
@@ -89,13 +89,13 @@ if __name__ == '__main__':
     file = os.path.join(root_directory, 'ids.txt')
     ids = [line.rstrip('\n') for line in open(file)]
 
-    #recommendations = recommend(ids, 100000)
+    recommendations = recommend(ids, 100000)
 
     outfile = os.path.join('r_word2vec_100_fos_author.json')
     recommendations = {}
     with open(outfile, 'r') as f:
-        #json.dump(recommendations, f)
-        recommendations = json.load(f)
+        json.dump(recommendations, f)
+        # recommendations = json.load(f)
 
     rec = 0
     for pid, recs in recommendations.items():
