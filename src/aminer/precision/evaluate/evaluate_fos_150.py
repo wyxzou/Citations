@@ -25,7 +25,7 @@ fasttext = Word2Vec.load(os.path.join(word2vec_directory, 'word2vec_150/word2vec
 word_to_idx = list(vec.get_feature_names())
 relevant_ids = None
 dim = 150
-filter_method = os.path.join(word2vec_directory, '2019_filters', 'aggregated_filters.json')
+filter_method = os.path.join(root_directory, '2019_filters', 'aggregated_filters.json')
 with open(filter_method) as relevant_ids_file:
     relevant_ids = json.load(relevant_ids_file)
 
@@ -74,7 +74,7 @@ def recommend(ids, k=100):
 
     for i, (target_id, abstract) in enumerate(ids_to_abstract.items()):
         print(i, "Finding recommendations for: ", target_id)
-        embeddings_directory = 'word2vec_150_abstract_dictionaries'
+        embeddings_directory = os.path.join(root_directory, 'word2vec', 'word2vec_150_abstract_dictionaries')
 
         current_embedding = compute_abstract_embedding(abstract, is_query=True)
 
@@ -87,16 +87,15 @@ def recommend(ids, k=100):
 
 
 if __name__ == '__main__':
-    file = os.path.join(root_directory, 'ids.txt')
+    file = os.path.join(root_directory, '2019_ids.txt')
     ids = [line.rstrip('\n') for line in open(file)]
+    ids = ids[:40]
+    recommendations = recommend(ids, 100000)
 
-    #recommendations = recommend(ids, 100000)
-
-    outfile = os.path.join('r_word2vec_150_fos_author.json')
-    recommendations = {}
-    with open(outfile, 'r') as f:
-        #json.dump(recommendations, f)
-        recommendations = json.load(f)
+    outfile = os.path.join(root_directory, 'r_word2vec_150_fos_author.json')
+    with open(outfile, 'w') as f:
+        json.dump(recommendations, f)
+        # recommendations = json.load(f)
 
     rec = 0
     for pid, recs in recommendations.items():
