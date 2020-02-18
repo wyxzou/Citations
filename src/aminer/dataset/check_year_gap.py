@@ -1,6 +1,8 @@
 import pkg_resources
 import os
 
+from tqdm import tqdm
+
 from aminer.recall.query_es import get_year_by_pid, get_references_by_pid
 from aminer.precision.utility import dump_json
 
@@ -12,7 +14,7 @@ if __name__ == '__main__':
     ids = [line.rstrip('\n') for line in open(file)]
     count = 0
     over_dict = {}
-    for pid in ids:
+    for pid in tqdm(ids):
         references = get_references_by_pid(pid)
         over = 0
         for p in references:
