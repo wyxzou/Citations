@@ -58,8 +58,10 @@ for id in tqdm(ids):
 
     print(len(potentially_cited_authors_o1[id]), len(potentially_cited_authors_o2[id]))
 
-dump_json(os.path.join(support_directory, 'p_o1.json'), {i:list(potentially_cited_authors_o1[i]) for i in potentially_cited_authors_o1})
-dump_json(os.path.join(support_directory, 'p_o2.json'), {i:list(potentially_cited_authors_o2[i]) for i in potentially_cited_authors_o2})
+dump_json(os.path.join(support_directory, 'p_o1.json'),
+          {i: list(potentially_cited_authors_o1[i]) for i in potentially_cited_authors_o1})
+dump_json(os.path.join(support_directory, 'p_o2.json'),
+          {i: list(potentially_cited_authors_o2[i]) for i in potentially_cited_authors_o2})
 
 ids = [i for i in ids if i not in ['1992078202', '2004111797', '1551676982', '2163666621', '1575030031']]
 potentially_cited_authors_o1 = load_json(os.path.join(support_directory, 'p_o1.json'))

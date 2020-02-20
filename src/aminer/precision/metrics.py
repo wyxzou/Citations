@@ -3,9 +3,11 @@ import os
 import pkg_resources
 import json
 
+
 from aminer.recall.query_es import get_references_by_pid, \
     get_abstract_by_pids,\
-    get_title_by_pid
+    get_title_by_pid, \
+    get_year_by_pid
 
 
 def num_intersection(pred, truth):
@@ -17,6 +19,16 @@ def num_intersection(pred, truth):
     return intersection
 
 
+def omit_years(truth, years_excluded):
+    pid_omitted = []
+    for pid in truth:
+        year = get_year_by_pid(pid)
+        if year not in years_excluded:
+            pid_omitted.append(pid)
+
+    return pid_omitted
+
+
 def precision(pred, truth):
     cardinality_retrieved_documents = len(pred)
     intersection = num_intersection(pred, truth)
@@ -25,7 +37,7 @@ def precision(pred, truth):
 
 
 def recall(pred, truth):
-    cardinality_retrieved_documents = len(truth)
+    cardinality_retrieved_documents = len(omit_years(truth, [2018, 2019]))
     intersection = num_intersection(pred, truth)
 
     return intersection / cardinality_retrieved_documents
