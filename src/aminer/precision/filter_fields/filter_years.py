@@ -16,7 +16,7 @@ def find_invalid_years(years):
             if pyear in years:
                 papers_with_invalid_years.append(pid)
 
-    dump_json(os.path.join(support_directory, 'invalid_citations_based_on_year.json'), invalid_years)
+    dump_json(os.path.join(support_directory, 'invalid_citations_based_on_year.json'), papers_with_invalid_years)
 
 
 if __name__ == '__main__':

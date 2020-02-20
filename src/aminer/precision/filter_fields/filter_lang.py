@@ -14,7 +14,7 @@ def find_invalid_lang():
         a = load_json(os.path.join(support_directory, 'language_dictionaries/language_dict_{}.json'.format(i)))
         for pid, plang in a.items():
             if plang != 'en':
-                plang.append(pid)
+                papers_with_invalid_languages.append(pid)
 
     dump_json(os.path.join(support_directory, 'invalid_citations_based_on_year.json'), papers_with_invalid_languages)
 
