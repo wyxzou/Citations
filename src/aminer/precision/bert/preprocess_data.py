@@ -7,18 +7,17 @@ from pytorch_pretrained_bert.tokenization import BertTokenizer
 from util import EnglishTextProcessor, dump_json, load_json
 
 class Dataset():
-	def __init__(self, pretrained_bert_folder_path, abstract_folder_path, references_folder_path, text_processor, max_file_body_length):
+	def __init__(self, pretrained_bert_folder_path, processed_abstract_folder_path, references_folder_path, max_file_body_length):
 		self.id_to_references = {}
 		for file_path in os.listdir(references_folder_path):
 			with open(os.path.join(references_folder_path, file_path)) as references_file:
 				self.id_to_references.update(json.load(references_file))
 
 		self.id_to_abstract = {}
-		for file_path in os.listdir(abstract_folder_path):
-			with open(os.path.join(abstract_folder_path, file_path)) as abstract_file:
+		for file_path in os.listdir(processed_abstract_folder_path):
+			with open(os.path.join(processed_abstract_folder_path, file_path)) as abstract_file:
 				self.id_to_abstract.update(json.load(abstract_file))
 
-		self.text_processor = text_processor
 		self.bert_tokenizer = BertTokenizer.from_pretrained(pretrained_bert_folder_path)
 
 	@staticmethod
@@ -78,12 +77,11 @@ class Dataset():
 
 		examples = []
 		positive_examples_created = 0
-		abstract = self.text_processor(abstract)
 		abstract_query_tokens = self.bert_tokenizer.tokenize(abstract)
 		for reference_id in references:
 			# since we are looking at the latest source code, a file may have been deleted
 			query_tokens = abstract_query_tokens.copy()
-			reference_abstract = self.text_processor(self.id_to_abstract[reference_id])
+			reference_abstract = self.id_to_abstract[reference_id]
 			reference_tokens = self.bert_tokenizer.tokenize(reference_abstract)
 			example = Dataset.create_example(self.bert_tokenizer, id, query_tokens, reference_tokens, True, max_sequence_length, masked_lm_probability, max_predictions_per_sequence)
 			examples += [example]
@@ -101,7 +99,7 @@ class Dataset():
 			negative_reference_id = shuffled_ids[index]
 			if negative_reference_id not in references:
 				query_tokens = abstract_query_tokens.copy()
-				negative_reference_abstract = self.text_processor(self.id_to_abstract[negative_reference_id])
+				negative_reference_abstract = self.id_to_abstract[negative_reference_id]
 				negative_reference_tokens = self.bert_tokenizer.tokenize(negative_reference_abstract)
 				example = Dataset.create_example(self.bert_tokenizer, id, query_tokens, negative_reference_tokens, False, max_sequence_length, masked_lm_probability, max_predictions_per_sequence)
 				examples += [example]
@@ -124,8 +122,7 @@ class Dataset():
 		return next_sentence_data
 
 def generate_dataset(pretrained_bert_folder_path, abstract_folder_path, references_folder_path, max_sequence_length, masked_lm_probability=0.2, max_predictions_per_sequence=5):
-	text_processor = EnglishTextProcessor()
-	dataset = Dataset(pretrained_bert_folder_path, abstract_folder_path, references_folder_path, text_processor, max_sequence_length)
+	dataset = Dataset(pretrained_bert_folder_path, abstract_folder_path, references_folder_path, max_sequence_length)
 	next_sentence_data = dataset.get_next_sentence_data(max_sequence_length, 0.2, 5)
 	return next_sentence_data
 
