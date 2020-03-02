@@ -89,7 +89,7 @@ def recommend(ids, k=100):
 if __name__ == '__main__':
     file = os.path.join(root_directory, '2019_ids.txt')
     ids = [line.rstrip('\n') for line in open(file)]
-    ids = ids[:40]
+
     recommendations = recommend(ids, 100000)
 
     outfile = os.path.join(root_directory, 'r_word2vec_150_fos_author.json')

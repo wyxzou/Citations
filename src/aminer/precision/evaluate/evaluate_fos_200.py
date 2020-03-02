@@ -17,14 +17,15 @@ from aminer.recall.query_es import get_abstract_by_pids, get_references_by_pid
 from aminer.precision.metrics import recall, precision
 
 root_directory = pkg_resources.resource_filename("aminer", "support")
+word2vec_directory = os.path.join(root_directory, "word2vec")
 model_directory = os.path.join(root_directory, "models")
 
 vec = pickle.load(open(os.path.join(model_directory, 'vec.model'), 'rb'))
-fasttext = Word2Vec.load('word2vec_200/word2vec_200.model')
+fasttext = Word2Vec.load(os.path.join(word2vec_directory, 'word2vec_200/word2vec_200.model'))
 word_to_idx = list(vec.get_feature_names())
 relevant_ids = None
 dim = 200
-filter_method = 'fos_author_filtered.json'
+filter_method = os.path.join(root_directory, '2019_filters', 'aggregated_filters_o2.json')
 with open(filter_method) as relevant_ids_file:
     relevant_ids = json.load(relevant_ids_file)
 
@@ -87,16 +88,14 @@ def recommend(ids, k=100):
 
 
 if __name__ == '__main__':
-    file = os.path.join(root_directory, 'ids.txt')
+    file = os.path.join(root_directory, '2019_ids.txt')
     ids = [line.rstrip('\n') for line in open(file)]
 
     recommendations = recommend(ids, 100000)
 
-    outfile = os.path.join('r_word2vec_200_fos_author.json')
-    #recommendations = {}
+    outfile = os.path.join(root_directory, 'r_word2vec_200_fos_author_o2.json')
     with open(outfile, 'w') as f:
         json.dump(recommendations, f)
-        #recommendations = json.load(f)
 
     rec = 0
     for pid, recs in recommendations.items():
