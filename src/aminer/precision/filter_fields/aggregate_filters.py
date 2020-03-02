@@ -7,7 +7,7 @@ directory_2019 = os.path.join(support_directory, "2019_filters")
 
 
 fos = load_json(os.path.join(directory_2019, 'fos_filtered_recommendations.json'))
-author = load_json(os.path.join(directory_2019, 'author_filtered_citations_o2.json'))
+author = load_json(os.path.join(directory_2019, 'author_filtered_citations.json'))
 years = load_json(os.path.join(directory_2019, 'invalid_citations_based_on_year.json'))
 language = load_json(os.path.join(directory_2019, 'invalid_citations_based_on_language.json'))
 
