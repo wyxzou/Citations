@@ -8,8 +8,8 @@ directory_2019 = os.path.join(support_directory, "2019_filters")
 directory_keywords = os.path.join(support_directory, "keyword_filtering")
 
 fos = load_json(os.path.join(directory_2019, 'fos_filtered_recommendations.json'))
-author = load_json(os.path.join(support_directory, 'author_filtered_citations_o2.json'))
-years = load_json(os.path.join(support_directory, 'invalid_citations_based_on_year.json'))
+author = load_json(os.path.join(directory_2019, 'author_filtered_citations_o2.json'))
+years = load_json(os.path.join(directory_2019, 'invalid_citations_based_on_year.json'))
 language = load_json(os.path.join(directory_2019, 'invalid_citations_based_on_language.json'))
 keywords = load_json(os.path.join(directory_keywords, 'keywords_top_10000.json'))
 

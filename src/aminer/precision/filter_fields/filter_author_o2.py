@@ -7,6 +7,8 @@ from aminer.precision.utility import load_json, dump_json
 from aminer.recall.query_es import get_references_by_pid
 
 support_directory = pkg_resources.resource_filename("aminer", "support")
+directory_2019 = os.path.join(support_directory, "2019_filters")
+
 file = os.path.join(support_directory, '2019_ids.txt')
 ids = set([line.rstrip('\n') for line in open(file)])
 
@@ -17,6 +19,8 @@ first_order_author_dicts = load_json(os.path.join(support_directory, 'temp_first
 ids = [i for i in ids if i not in ['1992078202', '2004111797', '1551676982', '2163666621', '1575030031']]
 potentially_cited_authors_o1 = load_json(os.path.join(support_directory, 'p_o1.json'))
 potentially_cited_authors_o2 = load_json(os.path.join(support_directory, 'p_o2.json'))
+
+first_order_results = load_json(os.path.join(directory_2019, 'author_filtered_citations.json'))
 
 id_intersect = set(potentially_cited_authors_o1.keys()).intersection(ids)
 
@@ -42,5 +46,14 @@ for id in tqdm(potentially_cited_authors_for_id):
 
         if author in author_to_paper:
             potential_citations[id].update(author_to_paper[author])
+
+
+
+for id in tqdm(first_order_results):
+
+    if id in potential_citations:
+        potential_citations[id].update(first_order_results[id])
+    else:
+        potential_citations[id] = first_order_results[id]
 
 dump_json(os.path.join(support_directory, 'author_filtered_citations_o2.json'), {id:list(potential_citations[id]) for id in potential_citations})

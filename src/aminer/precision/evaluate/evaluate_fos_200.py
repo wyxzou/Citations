@@ -74,7 +74,7 @@ def recommend(ids, k=100):
 
     for i, (target_id, abstract) in enumerate(ids_to_abstract.items()):
         print(i, "Finding recommendations for: ", target_id)
-        embeddings_directory = 'word2vec_200_abstract_dictionaries'
+        embeddings_directory = os.path.join(root_directory, 'word2vec', 'word2vec_200_abstract_dictionaries')
 
         current_embedding = compute_abstract_embedding(abstract, is_query=True)
 
@@ -82,7 +82,6 @@ def recommend(ids, k=100):
 
         all_embeddings = get_all_embeddings(target_id, current_embedding, files)
         recommendations[target_id] = heapq.nlargest(k, all_embeddings, key=lambda e: e[1])
-        break
 
     return recommendations
 
@@ -90,7 +89,7 @@ def recommend(ids, k=100):
 if __name__ == '__main__':
     file = os.path.join(root_directory, '2019_ids.txt')
     ids = [line.rstrip('\n') for line in open(file)]
-
+    print(ids)
     recommendations = recommend(ids, 100000)
 
     outfile = os.path.join(root_directory, 'r_word2vec_200_fos_author_o2.json')

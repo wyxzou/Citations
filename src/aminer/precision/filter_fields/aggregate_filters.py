@@ -15,7 +15,13 @@ keywords = load_json(os.path.join(directory_keywords, 'keywords_top_10000.json')
 
 both = {}
 for id in fos:
-    if id in author:
+    if id in author and id in keywords:
         both[id] = list(set(author[id]).intersection(set(fos[id])).intersection(set(keywords[id])) - set(years) - set(language))
+    elif id in keywords and id not in author:
+        both[id] = list(set(fos[id]).intersection(set(keywords[id])) - set(years) - set(language))
+    elif id in author and id not in keywords:
+        both[id] = list(set(fos[id]).intersection(set(author[id])) - set(years) - set(language))
+    else:
+        both[id] = list(set(fos[id]) - set(years) - set(languages))
 
 dump_json(os.path.join(directory_2019, 'aggregated_filters.json'), both)
