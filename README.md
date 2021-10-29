@@ -1,4 +1,7 @@
 # Citations
+
+Recommends citations from aminer dataset https://www.aminer.org/citation. See slides Documentation/presentation.pdf.
+
 ## Core API Key
 ### https://core.ac.uk/api-keys/register/
 
